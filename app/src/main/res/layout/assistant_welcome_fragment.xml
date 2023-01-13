@@ -73,18 +73,21 @@
                         android:layout_columnSpan="1"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_margin="10dp">
+                        android:layout_margin="10dp"
+                        android:visibility="invisible">
 
                         <CheckBox
                             android:enabled="@{!viewModel.termsAndPrivacyAccepted}"
                             android:checked="@={viewModel.termsAndPrivacyAccepted}"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"/>
+                            android:layout_height="wrap_content"
+                            android:visibility="invisible"/>
 
                         <TextView
                             android:id="@+id/terms_and_privacy"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:visibility="invisible"/>
 
                     </LinearLayout>
 

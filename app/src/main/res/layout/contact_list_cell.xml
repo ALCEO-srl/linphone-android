@@ -56,10 +56,10 @@
                 android:layout_height="20dp"
                 android:adjustViewBounds="true"
                 android:scaleType="centerInside"
-                android:src="@drawable/linphone_logo_tinted"
+                android:src="@{viewModel.getPresenceIconRes()}"
                 android:layout_marginRight="10dp"
                 android:contentDescription="@string/content_description_linphone_user"
-                android:visibility="@{viewModel.hasPresence() ? View.VISIBLE : View.GONE}" />
+                android:visibility="visible" />
 
             <CheckBox
                 android:onClick="@{() -> selectionListViewModel.onToggleSelect(position)}"

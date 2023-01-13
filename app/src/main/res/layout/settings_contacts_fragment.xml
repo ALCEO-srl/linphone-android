@@ -69,7 +69,7 @@
                     linphone:title="@{@string/contacts_settings_friendlist_subscribe_title}"
                     linphone:listener="@{viewModel.friendListSubscribeListener}"
                     linphone:checked="@={viewModel.friendListSubscribe}"
-                    linphone:enabled="@{viewModel.readContactsPermissionGranted &amp;&amp; viewModel.rlsAddressAvailable}"/>
+                    linphone:enabled="@{viewModel.readContactsPermissionGranted}"/>
 
                 <include
                     layout="@layout/settings_widget_switch"

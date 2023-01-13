@@ -312,14 +312,47 @@ class AccountSettingsViewModel(val account: Account) : GenericSettingsViewModel(
     val stunServerListener = object : SettingListenerStub() {
         override fun onTextValueChanged(newValue: String) {
             val params = account.params.clone()
-            val natPolicy = params.natPolicy
-            val newNatPolicy = natPolicy?.clone() ?: core.createNatPolicy()
-            newNatPolicy.stunServer = newValue
-            newNatPolicy.isStunEnabled = newValue.isNotEmpty()
-            params.natPolicy = newNatPolicy
-            account.params = params
+
+            val turnusername: String = core.config.getString("app", "turnusername", "")!!
+            val turnuserpassword = core.config.getString("app", "turnuserpassword", "")
+            val turnrealm = core.config.getString("app", "turnrealm", "")
+
+            val authInfo = core.findAuthInfo(turnrealm, turnusername, null)
+            if (authInfo != null) {
+                Log.w("[Account Settings] Setting TURN AuthInfo")
+
+                val newAuthInfo = authInfo.clone()
+                newAuthInfo.password = turnuserpassword
+                newAuthInfo.userid = turnusername
+                newAuthInfo.realm = turnrealm
+                core.removeAuthInfo(authInfo)
+                core.addAuthInfo(newAuthInfo)
+            } else {
+                Log.w("[Account Settings] Creating TURN AuthInfo")
+                val authInfo = Factory.instance()
+                    .createAuthInfo(turnusername, turnusername, turnuserpassword, null, turnrealm, null)
+                core.addAuthInfo(authInfo)
+            }
+
+            if (params.natPolicy == null) {
+                Log.w("[Account Settings] No NAT Policy object in account params yet")
+                val natPolicy = core.createNatPolicy()
+                natPolicy.stunServer = newValue
+                natPolicy.isStunEnabled = newValue.isNotEmpty()
+                natPolicy.isTurnEnabled = newValue.isNotEmpty()
+                natPolicy.isIceEnabled = newValue.isNotEmpty()
+                natPolicy.stunServerUsername = turnusername
+                params.natPolicy = natPolicy
+            } else {
+                params.natPolicy?.stunServer = newValue
+                params.natPolicy?.isStunEnabled = newValue.isNotEmpty()
+                params.natPolicy?.stunServerUsername = turnusername
+                params.natPolicy?.isTurnEnabled = newValue.isNotEmpty()
+                params.natPolicy?.isIceEnabled = newValue.isNotEmpty()
+            }
             if (newValue.isEmpty()) ice.value = false
             stunServer.value = newValue
+            account.params = params
         }
     }
     val stunServer = MutableLiveData<String>()

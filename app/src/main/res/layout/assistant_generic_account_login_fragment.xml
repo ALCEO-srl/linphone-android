@@ -124,7 +124,8 @@
                     android:layout_height="wrap_content"
                     android:padding="10dp"
                     android:gravity="center"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:visibility="invisible">
 
                     <TextView
                         style="@style/assistant_input_field_header_font"

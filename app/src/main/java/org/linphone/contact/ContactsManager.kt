@@ -323,7 +323,9 @@ fun Friend.getContactForPhoneNumberOrAddress(value: String): String? {
 fun Friend.hasPresence(): Boolean {
     for (address in addresses) {
         val presenceModel = getPresenceModelForUriOrTel(address.asStringUriOnly())
-        if (presenceModel != null && presenceModel.basicStatus == PresenceBasicStatus.Open) return true
+        // dms if (presenceModel != null && presenceModel.basicStatus == PresenceBasicStatus.Open) return true
+        // dms As long as we have a presence doc we are fine, we don't care about the current status
+        if (presenceModel != null) return true // dms
     }
     for (number in phoneNumbers) {
         val presenceModel = getPresenceModelForUriOrTel(number)

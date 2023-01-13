@@ -78,6 +78,8 @@ class ContactViewModel(friend: Friend, async: Boolean = false) : MessageNotifier
 
     val isNativeContact = MutableLiveData<Boolean>()
 
+    private val contactPresenceIconRes = MutableLiveData<Int>()
+
     private val chatRoomListener = object : ChatRoomListenerStub() {
         override fun onStateChanged(chatRoom: ChatRoom, state: ChatRoom.State) {
             if (state == ChatRoom.State.Created) {
@@ -142,10 +144,12 @@ class ContactViewModel(friend: Friend, async: Boolean = false) : MessageNotifier
             contact.postValue(friend)
             displayName.postValue(friend.name)
             isNativeContact.postValue(friend.refKey != null)
+            contactPresenceIconRes.postValue(getPresenceIconResAsInt()) // dms
         } else {
             contact.value = friend
             displayName.value = friend.name
             isNativeContact.value = friend.refKey != null
+            contactPresenceIconRes.value = getPresenceIconResAsInt() // dms
         }
     }
 
@@ -192,6 +196,65 @@ class ContactViewModel(friend: Friend, async: Boolean = false) : MessageNotifier
         }
     }
 
+    // dms begin ************
+
+    fun updatePresenceIconRes() {
+        val resIcon = getPresenceIconResAsInt()
+        contactPresenceIconRes.postValue(resIcon)
+    }
+
+    fun getPresenceIconRes(): MutableLiveData<Int> {
+        return contactPresenceIconRes
+    }
+
+    private fun getPresenceIconResAsInt(): Int {
+
+        val friend = contact.value ?: return R.drawable.contact_presence_notabuddy
+
+        val pm = friend.presenceModel ?: return R.drawable.contact_presence_notabuddy
+
+        val basicStatus = pm.basicStatus
+        val activity = pm.activity
+
+        if (basicStatus == PresenceBasicStatus.Open) {
+            if (activity == null) {
+                Log.w("[Manager] ######### getPresenceIconResName On-Line")
+                return R.drawable.contact_presence_open
+            } else {
+                val type = activity.type
+                Log.w(
+                    "[Manager] ######### getPresenceIconResName " + activity.toString()
+                )
+                when (type) {
+                    PresenceActivity.Type.Busy -> return R.drawable.contact_presence_closed_busy
+                    PresenceActivity.Type.Away -> return R.drawable.contact_presence_open_away
+                    PresenceActivity.Type.OnThePhone -> return R.drawable.contact_presence_open_onthephone
+                    PresenceActivity.Type.Appointment -> return R.drawable.contact_presence_open_appointment
+                    else -> return R.drawable.contact_presence_open
+                }
+            }
+        } else {
+            Log.w("[Manager] ######### getPresenceIconResName Off-Line")
+            if (activity == null) {
+                return R.drawable.contact_presence_closed
+            } else {
+                val type = activity.type
+                when (type) {
+                    PresenceActivity.Type.Busy -> return R.drawable.contact_presence_closed_busy
+                    PresenceActivity.Type.Other -> {
+                        val OtherValue: String
+                        OtherValue = activity.toString()
+                        if (OtherValue.contains("out-of-office")) return R.drawable.contact_presence_open_away else return R.drawable.contact_presence_closed
+                    }
+                    PresenceActivity.Type.Appointment -> return R.drawable.contact_presence_closed_appointment
+                    else -> return R.drawable.contact_presence_closed
+                }
+            }
+        }
+    }
+
+    // dms end ************
+
     fun updateNumbersAndAddresses() {
         val list = arrayListOf<ContactNumberOrAddressData>()
         val friend = contact.value ?: return
@@ -202,7 +265,9 @@ class ContactViewModel(friend: Friend, async: Boolean = false) : MessageNotifier
 
             val value = address.asStringUriOnly()
             val presenceModel = friend.getPresenceModelForUriOrTel(value)
-            val hasPresence = presenceModel?.basicStatus == PresenceBasicStatus.Open
+            // dms val hasPresence = presenceModel?.basicStatus == PresenceBasicStatus.Open
+            // dms As long as we have a presence doc we are fine, we don't care about the current status
+            val hasPresence = presenceModel != null // dms
             val isMe = coreContext.core.defaultAccount?.params?.identityAddress?.weakEqual(address) ?: false
             val secureChatAllowed = LinphoneUtils.isEndToEndEncryptedChatAvailable() && !isMe && friend.getPresenceModelForUriOrTel(value)?.hasCapability(FriendCapability.LimeX3Dh) ?: false
             val displayValue = if (coreContext.core.defaultAccount?.params?.domain == address.domain) (address.username ?: value) else value

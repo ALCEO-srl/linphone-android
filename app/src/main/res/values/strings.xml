@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
 <!DOCTYPE resources [
-    <!ENTITY appName "Linphone">
+    <!ENTITY appName "BcsPhone">
 ]>
 
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
@@ -20,7 +20,7 @@
     <string name="about_version" translatable="false">&appName; Android %s</string>
     <string name="about_liblinphone_sdk_version" translatable="false">&appName; SDK %s</string>
     <string name="about_privacy_policy">Visit our privacy policy</string>
-    <string name="about_text" translatable="false">GNU General Public License v3.0\n © 2010–2022 Belledonne Communications</string>
+    <string name="about_text" translatable="false">GNU General Public License v3.0\n Based on Linphone by Belledonne Communications</string>
     <string name="about_weblate_link" translatable="false">https://weblate.linphone.org/projects/linphone/</string>
     <string name="about_weblate_translation">Help us translate &appName;</string>
 
@@ -63,7 +63,7 @@
     <string name="transport_tls">TLS</string>
 
     <!-- Launch screen -->
-    <string name="app_description">the <i>libre</i> SIP client</string>
+    <string name="app_description"><i>BCS</i> mobile SIP client</string>
 
     <!-- Status fragment -->
     <string name="status_connected">Connected</string>

@@ -20,7 +20,7 @@
             app:destination="@id/phoneAccountCreationFragment" />
         <action
             android:id="@+id/action_welcomeFragment_to_genericAccountWarningFragment"
-            app:destination="@id/genericAccountWarningFragment" />
+            app:destination="@id/genericAccountLoginFragment" />
         <action
             android:id="@+id/action_welcomeFragment_to_remoteProvisioningFragment"
             app:destination="@id/remoteProvisioningFragment" />

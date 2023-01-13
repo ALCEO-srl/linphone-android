@@ -205,6 +205,7 @@
 
                 <ImageView
                     android:onClick="@{attachFileClickListener}"
+                    android:visibility="@{View.GONE}"
                     android:enabled="@{chatSendingViewModel.attachFileEnabled}"
                     android:contentDescription="@string/content_description_attach_file"
                     android:layout_width="wrap_content"
@@ -214,6 +215,7 @@
 
                 <ImageView
                     android:id="@+id/voice_record"
+                    android:visibility="@{View.GONE}"
                     android:onTouch="@{voiceRecordingTouchListener}"
                     android:onClick="@{() -> chatSendingViewModel.toggleVoiceRecording()}"
                     android:selected="@{chatSendingViewModel.isVoiceRecording}"
@@ -234,6 +236,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:layout_marginTop="10dp"
+                    android:layout_marginLeft="10dp"
                     android:layout_marginBottom="10dp"
                     android:layout_weight="1"
                     android:background="@drawable/resizable_text_field"

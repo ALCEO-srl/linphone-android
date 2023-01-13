@@ -9,7 +9,7 @@ def appVersionName = "5.0.0"
 def appVersionCode = 50000
 
 static def getPackageName() {
-    return "org.linphone"
+    return "com.alceo.bcsphone"
 }
 
 def firebaseEnabled = new File(projectDir.absolutePath +'/google-services.json').exists()
@@ -93,7 +93,7 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "linphone-android-${variant.buildType.name}-${project.version}.apk"
+            outputFileName = getPackageName() + "-${variant.buildType.name}-${project.version}.apk"
         }
 
         var enableFirebaseService = "false"

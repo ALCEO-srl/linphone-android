@@ -140,6 +140,73 @@ class GenericLoginViewModel(private val accountCreator: AccountCreator) : ViewMo
             return
         }
 
+        // dms begin ************
+        // We set the default value direct from the linphonerc conf file
+        val turnusername: String = coreContext.core.config.getString("app", "turnusername", "")!!
+        val turnuserpassword = coreContext.core.config.getString("app", "turnuserpassword", "")
+        val turnrealm = coreContext.core.config.getString("app", "turnrealm", "")
+        val turnserver = coreContext.core.config.getString("app", "turnserver", "")!!
+        val outboundproxy = coreContext.core.config.getString("app", "outboundproxy", "")!!
+
+        val authInfo = coreContext.core.findAuthInfo(turnrealm, turnusername, null)
+        if (authInfo != null) {
+            Log.w("######[Account Creator] Setting TURN AuthInfo")
+
+            val newAuthInfo = authInfo.clone()
+            newAuthInfo.password = turnuserpassword
+            newAuthInfo.userid = turnusername
+            newAuthInfo.realm = turnrealm
+            coreContext.core.removeAuthInfo(authInfo)
+            coreContext.core.addAuthInfo(newAuthInfo)
+        } else {
+            Log.w("#######[Account Creator] Creating TURN AuthInfo")
+            val authInfo = Factory.instance()
+                .createAuthInfo(turnusername, turnusername, turnuserpassword, null, turnrealm, null)
+            coreContext.core.addAuthInfo(authInfo)
+        }
+
+        for (account in coreContext.core.accountList) {
+            if ((account.params.identityAddress?.username == username.value) &&
+                (account.params.identityAddress?.domain == domain.value)
+            ) {
+
+                if (account.params.natPolicy == null) {
+                    Log.w("[Account Settings] No NAT Policy object in account params yet")
+                    val natPolicy = coreContext.core.createNatPolicy()
+                    natPolicy.stunServer = turnserver
+                    natPolicy.isStunEnabled = turnserver.isNotEmpty()
+                    natPolicy.isTurnEnabled = turnserver.isNotEmpty()
+                    natPolicy.isIceEnabled = turnserver.isNotEmpty()
+                    natPolicy.stunServerUsername = turnusername
+                    account.params.natPolicy = natPolicy
+                } else {
+                    account.params.natPolicy?.stunServer = turnserver
+                    account.params.natPolicy?.isStunEnabled = turnserver.isNotEmpty()
+                    account.params.natPolicy?.stunServerUsername = turnusername
+                    account.params.natPolicy?.isTurnEnabled = turnserver.isNotEmpty()
+                    account.params.natPolicy?.isIceEnabled = turnserver.isNotEmpty()
+                }
+                account.params.pushNotificationAllowed = true
+                account.params.isOutboundProxyEnabled = true
+                account.params.limeServerUrl = ""
+
+                val address = Factory.instance().createAddress(outboundproxy)
+                if (address != null) {
+                    account.params.serverAddress = address
+                }
+                account.params.isPublishEnabled = true
+                account.params.transport = TransportType.Tls
+                for (payloadType in coreContext.core.audioPayloadTypes) {
+                    if (payloadType.isVbr) {
+                        payloadType.normalBitrate = 64
+                    }
+                }
+
+                break
+            }
+        }
+        // dms end ************
+
         Log.i("[Assistant] [Generic Login] Proxy config created")
     }
 

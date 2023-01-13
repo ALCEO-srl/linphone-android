@@ -20,6 +20,8 @@
 package org.linphone.activities.main.contact.viewmodels
 
 import android.content.ContentProviderOperation
+import android.os.Handler
+import android.os.Looper
 import android.provider.ContactsContract
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -55,6 +57,11 @@ class ContactsListViewModel : ViewModel() {
         override fun onContactsUpdated() {
             Log.i("[Contacts] Contacts have changed")
             updateContactsList(true)
+
+            // dms begin ************
+            Log.w("[ContactsList.onRegistrationStateChanged] Refreshing subscriptions")
+            enableSubscriptions()
+            // dms end ************
         }
     }
 
@@ -72,8 +79,65 @@ class ContactsListViewModel : ViewModel() {
         }
     }
 
+    // dms begin ************
+
+    // private var timer: Timer? = null
+
+    private val coreListener = object : CoreListenerStub() {
+
+        @Deprecated("Deprecated in Java")
+        override fun onRegistrationStateChanged(
+            core: Core,
+            cfg: ProxyConfig,
+            state: RegistrationState,
+            message: String
+        ) {
+            Log.w("[ContactsList.onRegistrationStateChanged]  " + message)
+            if (state == RegistrationState.Ok) {
+                Log.w("[ContactsList.onRegistrationStateChanged] Refreshing subscriptions")
+                enableSubscriptions()
+            }
+        }
+
+        override fun onNotifyPresenceReceived(core: Core, linphoneFriend: Friend) {
+            Log.w("[ContactsList.onNotifyPresenceReceived] PresenceReceived for user=" + linphoneFriend.address?.asStringUriOnly())
+            Log.w("[ContactsList.onNotifyPresenceReceived] Searching in contacts list")
+            contactsList.value.orEmpty().forEach {
+
+                if (it.contact.value?.address?.asStringUriOnly() == linphoneFriend.address?.asStringUriOnly()) {
+                    Log.w("[ContactsList.onNotifyPresenceReceived] Updating presence for user=" + it.contact.value?.address?.asStringUriOnly())
+                    it.updatePresenceIconRes()
+                }
+            }
+        }
+    }
+
+    // dms end ************
+
     init {
-        sipContactsSelected.value = coreContext.contactsManager.shouldDisplaySipContactsList()
+
+        // dms begin ************
+        coreContext.core.addListener(coreListener)
+
+        val handler = Handler(Looper.getMainLooper())
+        handler.postDelayed(
+            {
+                // First we try to start/refresh the subscription if needed
+                Log.w("[ContactsList.init] Refreshing subscriptions")
+                enableSubscriptions()
+
+                // Then we update the presence icon res for each contact viewmodel
+                Log.w("[ContactsList.init] Initializing users presence icon")
+                contactsList.value.orEmpty().forEach {
+                    it.updatePresenceIconRes()
+                    Log.w("[ContactsList.init] Initializing user=" + it.contact.value?.address?.asStringUriOnly())
+                }
+            },
+            1000
+        )
+        // dms end ************
+
+        sipContactsSelected.value = true // dms  coreContext.contactsManager.shouldDisplaySipContactsList()
         nativeAddressBookEnabled.value = corePreferences.enableNativeAddressBookIntegration
 
         coreContext.contactsManager.addListener(contactsUpdatedListener)
@@ -81,6 +145,14 @@ class ContactsListViewModel : ViewModel() {
     }
 
     override fun onCleared() {
+        // dms begin *********************
+
+        coreContext.core.removeListener(coreListener)
+
+        disableSubscriptions()
+
+        // dms end *********************
+
         contactsList.value.orEmpty().forEach(ContactViewModel::destroy)
         coreContext.contactsManager.magicSearch.removeListener(magicSearchListener)
         coreContext.contactsManager.removeListener(contactsUpdatedListener)
@@ -133,6 +205,8 @@ class ContactsListViewModel : ViewModel() {
 
                 for (result in results) {
                     val friend = result.friend
+
+                    Log.w("[Contacts] SearchResult " + friend?.name)
 
                     val viewModel = if (friend != null) {
                         ContactViewModel(friend, true)
@@ -211,4 +285,74 @@ class ContactsListViewModel : ViewModel() {
             }
         }
     }
+
+    // dms begin ************
+    // These functions are needed to enable or disable the buddies subscriptions. The disable function
+    // is not really needed, as it turn out that liblinphone already stops the subscriptions whenever
+    // the app enters the background state
+
+    private fun enableSubscriptions() {
+        // dms *****
+        Log.w("[ContactsListViewModel] EnableSubscriptions")
+        val core: Core = coreContext.core
+        if (core != null) {
+            val friendLists = core.friendsLists
+            Log.w("[ContactsListViewModel] Checking friend list")
+            for (list in friendLists) {
+                val friends = list.friends
+                for (friend in friends) {
+                    for (address in friend.addresses) {
+                        if (address.isSip) {
+                            Log.w(
+                                "[ContactsListViewModel] Found [",
+                                address.asString(),
+                                "], checking presence status"
+                            )
+                            if (!friend.isSubscribesEnabled) {
+                                Log.w(
+                                    "[ContactsListViewModel] Presence disabled, starting new subscription ", address.asString()
+                                )
+                                friend.edit()
+                                friend.isSubscribesEnabled = true
+                                friend.incSubscribePolicy = SubscribePolicy.SPAccept
+                                friend.done()
+                                break
+                            } else Log.w("[ContactsListViewModel] Presence already enabled", address.asString())
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun disableSubscriptions() {
+        // dms ******
+        Log.w("[ContactsFragment] DisableSubscriptions")
+
+        val core: Core = coreContext.core
+        if (core != null) {
+            Log.w("[ContactsFragment] Checking friend list")
+            val friendLists = core.friendsLists
+            for (list in friendLists) {
+                val friends = list.friends
+                for (friend in friends) {
+                    for (address in friend.addresses) {
+                        if (address.isSip) {
+                            Log.w(
+                                "[ContactsFragment] Found [",
+                                address.asString(),
+                                "], disabling presence"
+                            )
+                            friend.edit()
+                            friend.isSubscribesEnabled = false
+                            friend.incSubscribePolicy = SubscribePolicy.SPDeny
+                            friend.done()
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    }
+// dms end ************
 }

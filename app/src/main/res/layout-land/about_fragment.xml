@@ -140,7 +140,8 @@
                     android:gravity="center"
                     android:paddingTop="20dp"
                     android:text="@string/about_link"
-                    android:textColorLink="@color/primary_color" />
+                    android:textColorLink="@color/primary_color"
+                    android:visibility="invisible"/>
 
                 <TextView
                     android:onClick="@{privacyPolicyClickListener}"
@@ -152,7 +153,8 @@
                     android:paddingTop="10dp"
                     android:gravity="center"
                     android:text="@string/about_privacy_policy"
-                    android:textColorLink="@color/primary_color" />
+                    android:textColorLink="@color/primary_color"
+                    android:visibility="invisible"/>
 
                 <TextView
                     android:onClick="@{licenseClickListener}"
@@ -175,7 +177,8 @@
                     android:gravity="center"
                     android:paddingTop="10dp"
                     android:paddingBottom="20dp"
-                    android:text="@string/about_weblate_translation" />
+                    android:text="@string/about_weblate_translation"
+                    android:visibility="invisible" />
 
                 <View
                     android:layout_width="match_parent"

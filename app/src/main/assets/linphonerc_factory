@@ -7,9 +7,7 @@
 [net]
 mtu=1300
 force_ice_disablement=0
-
-[rtp]
-accept_any_encryption=1
+friendlist_subscription_enabled=1
 
 [sip]
 guess_hostname=1
@@ -21,6 +19,8 @@ use_cpim=1
 zrtp_key_agreements_suites=MS_ZRTP_KEY_AGREEMENT_K255_KYB512
 chat_messages_aggregation_delay=1000
 chat_messages_aggregation=1
+verify_server_certs=0
+verify_server_cn=0
 
 [sound]
 #remove this property for any application that is not Linphone public version itself
@@ -29,18 +29,33 @@ ec_calibrator_cool_tones=1
 [video]
 displaytype=MSAndroidTextureDisplay
 auto_resize_preview_to_keep_ratio=1
-max_conference_size=vga
+max_mosaic_size=vga
 
 [misc]
 enable_basic_to_client_group_chat_room_migration=0
 enable_simple_group_chat_message_state=0
 aggregate_imdn=1
-notify_each_friend_individually_when_presence_received=0
+notify_each_friend_individually_when_presence_received=1
 
 [app]
 activation_code_length=4
 prefer_basic_chat_room=1
 record_aware=1
+
+assistant_create_account=0
+assistant_linphone_login=0
+assistant_remote_provisioning=0
+read_and_agree_terms_and_privacy=1
+settings_tunnel=0
+settings_conferences=0
+
+show_new_contact_account_dialog=0
+store_presence_in_native_contact=0
+turnrealm=alceo.com
+turnusername=usralceo
+turnuserpassword=S3cretPa55word
+turnserver=sturn.semki.it
+outboundproxy=sip:95.110.191.232:18061;transport=tls
 
 [assistant]
 xmlrpc_url=https://subscribe.linphone.org:444/wizard.php

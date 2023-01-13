@@ -188,7 +188,8 @@
                     linphone:title="@{@string/account_settings_ice_title}"
                     linphone:listener="@{viewModel.iceListener}"
                     linphone:checked="@={viewModel.ice}"
-                    linphone:enabled="@{viewModel.stunServer.length() > 0}"/>
+                    linphone:enabled="@{viewModel.stunServer.length() > 0}"
+                    android:visibility="invisible"/>
 
                 <include
                     layout="@layout/settings_widget_switch"

@@ -173,6 +173,14 @@ class MainActivity : GenericActivity(), SnackBarActivity, NavController.OnDestin
     override fun onResume() {
         super.onResume()
         coreContext.contactsManager.addListener(listener)
+
+        // dms begin ************
+        // Not sure about this one, but coming from the backgound it could be a good idea to refresh
+        // the registration
+//        for (account in coreContext.core.accountList) {
+//            account.refreshRegister()
+//        }
+        // dms end ************
     }
 
     override fun onPause() {

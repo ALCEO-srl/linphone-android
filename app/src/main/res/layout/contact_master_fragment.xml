@@ -46,30 +46,6 @@
                     android:layout_weight="0.2">
 
                     <ImageView
-                        android:onClick="@{allContactsToggleClickListener}"
-                        android:enabled="@{viewModel.sipContactsSelected}"
-                        android:contentDescription="@string/content_description_show_all_contacts"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="?attr/button_background_drawable"
-                        android:padding="15dp"
-                        android:src="@drawable/contacts_all" />
-
-                    <View
-                        android:visibility="@{viewModel.sipContactsSelected ? View.GONE : View.VISIBLE}"
-                        android:layout_width="match_parent"
-                        android:layout_height="5dp"
-                        android:layout_alignParentBottom="true"
-                        android:background="?attr/accentColor" />
-
-                </RelativeLayout>
-
-                <RelativeLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="0.2">
-
-                    <ImageView
                         android:onClick="@{sipContactsToggleClickListener}"
                         android:enabled="@{!viewModel.sipContactsSelected}"
                         android:contentDescription="@string/content_description_show_sip_contacts"

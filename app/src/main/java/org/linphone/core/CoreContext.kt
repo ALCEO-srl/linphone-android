@@ -50,6 +50,7 @@ import javax.crypto.spec.GCMParameterSpec
 import kotlin.math.abs
 import kotlinx.coroutines.*
 import org.linphone.BuildConfig
+import org.linphone.LinphoneApplication
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.compatibility.Compatibility
@@ -150,7 +151,43 @@ class CoreContext(
 
         override fun onPushNotificationReceived(core: Core, payload: String?) {
             Log.i("[Context] Push notification received: $payload")
+
+            // dms begin ************
+            for (account in LinphoneApplication.coreContext.core.accountList) {
+                Log.i("[Context] Push notification, refreshing register: " + account.contactAddress?.asStringUriOnly())
+                account.refreshRegister()
+            }
+            // dms end ************
         }
+
+        // dms BEGIN **********
+
+        private fun isPresenceModelActivitySet(core: Core): Boolean {
+            return (core?.presenceModel?.activity != null)
+        }
+
+        private fun changeStatusToOnline(core: Core) {
+            if (core == null) return
+            val model: PresenceModel = core.createPresenceModel()
+            model.basicStatus = PresenceBasicStatus.Open
+            core.presenceModel = model
+        }
+
+        private fun changeStatusToOnThePhone(core: Core) {
+            if (core == null) return
+
+            if (core?.presenceModel?.activity != null) {
+                if (core?.presenceModel?.activity?.type != PresenceActivity.Type.OnThePhone) {
+                    core?.presenceModel?.activity?.type = PresenceActivity.Type.OnThePhone
+                }
+            } else {
+                val model: PresenceModel =
+                    core.createPresenceModelWithActivity(PresenceActivity.Type.OnThePhone, null)
+                core.presenceModel = model
+            }
+        }
+
+        // dms END **********
 
         override fun onCallStateChanged(
             core: Core,
@@ -159,6 +196,15 @@ class CoreContext(
             message: String
         ) {
             Log.i("[Context] Call state changed [$state]")
+
+            //  dms BEGIN **********
+            if (((state == Call.State.IncomingReceived) || (state == Call.State.OutgoingInit)) &&
+                (core.callsNb == 1)
+            ) {
+                changeStatusToOnThePhone(core)
+            }
+            //  dms END **********
+
             if (state == Call.State.IncomingReceived || state == Call.State.IncomingEarlyMedia) {
                 if (declineCallDueToGsmActiveCall()) {
                     call.decline(Reason.Busy)
@@ -220,6 +266,13 @@ class CoreContext(
                     }
                 }
             } else if (state == Call.State.End || state == Call.State.Error || state == Call.State.Released) {
+
+                // dms BEGIN **********
+                if (core.callsNb == 0) {
+                    changeStatusToOnline(core)
+                }
+                // dms END ********** dms
+
                 if (state == Call.State.Error) {
                     Log.w("[Context] Call error reason is ${call.errorInfo.protocolCode} / ${call.errorInfo.reason} / ${call.errorInfo.phrase}")
                     val toastMessage = when (call.errorInfo.reason) {
