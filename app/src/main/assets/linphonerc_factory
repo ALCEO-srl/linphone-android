@@ -21,6 +21,10 @@ chat_messages_aggregation_delay=1000
 chat_messages_aggregation=1
 verify_server_certs=0
 verify_server_cn=0
+store_ha1_passwd=0
+
+#keepalive_period=0
+#tcp_tls_keepalive=0
 
 [sound]
 #remove this property for any application that is not Linphone public version itself
@@ -48,7 +52,9 @@ assistant_remote_provisioning=0
 read_and_agree_terms_and_privacy=1
 settings_tunnel=0
 settings_conferences=0
+settings_contacts=0
 
+enable_native_address_book=0
 show_new_contact_account_dialog=0
 store_presence_in_native_contact=0
 turnrealm=alceo.com
@@ -56,6 +62,10 @@ turnusername=usralceo
 turnuserpassword=S3cretPa55word
 turnserver=sturn.semki.it
 outboundproxy=sip:95.110.191.232:18061;transport=tls
+
+[bcsws]
+host=bcsws.alceo.com
+port=48097
 
 [assistant]
 xmlrpc_url=https://subscribe.linphone.org:444/wizard.php

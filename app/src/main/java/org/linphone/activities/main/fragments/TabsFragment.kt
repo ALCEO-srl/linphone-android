@@ -33,6 +33,7 @@ import org.linphone.activities.navigateToCallHistory
 import org.linphone.activities.navigateToChatRooms
 import org.linphone.activities.navigateToContacts
 import org.linphone.activities.navigateToDialer
+import org.linphone.activities.navigateToDirectory
 import org.linphone.databinding.TabsFragmentBinding
 import org.linphone.utils.Event
 
@@ -67,6 +68,15 @@ class TabsFragment : GenericFragment<TabsFragmentBinding>(), NavController.OnDes
             sharedViewModel.updateContactsAnimationsBasedOnDestination.value = Event(findNavController().currentDestination?.id ?: -1)
             navigateToContacts()
         }
+// dms *******
+        binding.setDirectoryClickListener {
+            when (findNavController().currentDestination?.id) {
+                R.id.dialerFragment -> sharedViewModel.updateDialerAnimationsBasedOnDestination.value = Event(R.id.directoryFragment)
+            }
+            sharedViewModel.updateContactsAnimationsBasedOnDestination.value = Event(findNavController().currentDestination?.id ?: -1)
+            navigateToDirectory()
+        }
+        // dms *********
 
         binding.setDialerClickListener {
             when (findNavController().currentDestination?.id) {
@@ -106,6 +116,8 @@ class TabsFragment : GenericFragment<TabsFragmentBinding>(), NavController.OnDes
                 R.id.masterContactsFragment -> binding.motionLayout.transitionToState(R.id.contacts)
                 R.id.dialerFragment -> binding.motionLayout.transitionToState(R.id.dialer)
                 R.id.masterChatRoomsFragment -> binding.motionLayout.transitionToState(R.id.chat_rooms)
+                // dms
+                R.id.directoryFragment -> binding.motionLayout.transitionToState(R.id.directory)
             }
         } else {
             when (destination.id) {
@@ -113,6 +125,7 @@ class TabsFragment : GenericFragment<TabsFragmentBinding>(), NavController.OnDes
                 R.id.masterContactsFragment -> binding.motionLayout.setTransition(R.id.contacts, R.id.contacts)
                 R.id.dialerFragment -> binding.motionLayout.setTransition(R.id.dialer, R.id.dialer)
                 R.id.masterChatRoomsFragment -> binding.motionLayout.setTransition(R.id.chat_rooms, R.id.chat_rooms)
+                R.id.directoryFragment -> binding.motionLayout.setTransition(R.id.directory, R.id.directory)
             }
         }
     }

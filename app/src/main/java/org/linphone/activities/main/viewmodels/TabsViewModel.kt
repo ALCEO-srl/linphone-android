@@ -35,6 +35,8 @@ class TabsViewModel : ViewModel() {
 
     val leftAnchor = MutableLiveData<Float>()
     val middleAnchor = MutableLiveData<Float>()
+    val middleLeftAnchor = MutableLiveData<Float>()
+    val middleRightAnchor = MutableLiveData<Float>()
     val rightAnchor = MutableLiveData<Float>()
 
     val historyMissedCountTranslateY = MutableLiveData<Float>()
@@ -88,16 +90,12 @@ class TabsViewModel : ViewModel() {
     init {
         coreContext.core.addListener(listener)
 
-        if (corePreferences.disableChat) {
-            leftAnchor.value = 1 / 3F
-            middleAnchor.value = 2 / 3F
-            rightAnchor.value = 1F
-        } else {
-            leftAnchor.value = 0.25F
-            middleAnchor.value = 0.5F
-            rightAnchor.value = 0.75F
-        }
-
+// ** dms  This change is mandatory to visualize tabs button correctly
+        leftAnchor.value = 0.2F
+        middleLeftAnchor.value = 0.4F
+        middleRightAnchor.value = 0.6F
+        rightAnchor.value = 0.8F
+// **
         updateUnreadChatCount()
         updateMissedCallCount()
 

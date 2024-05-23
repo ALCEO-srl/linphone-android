@@ -833,6 +833,7 @@
     <string name="content_description_toggle_side_menu">Show or hide side menu</string>
     <string name="content_description_menu_history">Call history</string>
     <string name="content_description_menu_contacts">Contacts</string>
+    <string name="content_description_directory">Address book</string>
     <string name="content_description_menu_dialer">Dialer</string>
     <string name="content_description_menu_chat">Conversations</string>
     <string name="content_description_dialer_erase">Remove last character</string>

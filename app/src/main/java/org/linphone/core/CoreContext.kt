@@ -37,6 +37,7 @@ import androidx.lifecycle.*
 import androidx.loader.app.LoaderManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import java.io.File
+import java.io.IOException
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.KeyStore
@@ -53,6 +54,7 @@ import org.linphone.BuildConfig
 import org.linphone.LinphoneApplication
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
+import org.linphone.bcsws.BcsWsHandler
 import org.linphone.compatibility.Compatibility
 import org.linphone.compatibility.PhoneStateInterface
 import org.linphone.contact.ContactLoader
@@ -64,6 +66,7 @@ import org.linphone.notifications.NotificationsManager
 import org.linphone.telecom.TelecomHelper
 import org.linphone.utils.*
 import org.linphone.utils.Event
+import retrofit2.HttpException
 
 class CoreContext(
     val context: Context,
@@ -81,6 +84,8 @@ class CoreContext(
     override fun getViewModelStore(): ViewModelStore {
         return _viewModelStore
     }
+
+    var bcsWsHandler: BcsWsHandler? = null
 
     private val contactLoader = ContactLoader()
 
@@ -128,13 +133,15 @@ class CoreContext(
     private var callOverlay: View? = null
     private var previousCallState = Call.State.Idle
     private lateinit var phoneStateListener: PhoneStateInterface
+    private var lastAccountIdRegistered: String? = ""
 
     private val listener: CoreListenerStub = object : CoreListenerStub() {
         override fun onGlobalStateChanged(core: Core, state: GlobalState, message: String) {
             Log.i("[Context] Global state changed [$state]")
-            if (state == GlobalState.On) {
-                fetchContacts()
-            }
+            // dms We don't fetch the contact anymore
+            // if (state == GlobalState.On) {
+            //    fetchContacts()
+            // }
         }
 
         override fun onAccountRegistrationStateChanged(
@@ -144,8 +151,32 @@ class CoreContext(
             message: String
         ) {
             Log.i("[Context] Account [${account.params.identityAddress?.asStringUriOnly()}] registration state changed [$state]")
+            Log.i("[Context] Account lastAccountIdRegistered=[$lastAccountIdRegistered]")
             if (state == RegistrationState.Ok && account == core.defaultAccount) {
+
+                if (lastAccountIdRegistered?.length == 0 || lastAccountIdRegistered != account.params.identityAddress?.asStringUriOnly()) {
+                    lastAccountIdRegistered = account.params.identityAddress?.asStringUriOnly()
+                    val username = account.params.identityAddress?.username ?: "nouser"
+                    val domain = account.params.identityAddress?.domain ?: "nodomain"
+                    val authInfo = account.findAuthInfo()
+                    val password = authInfo?.password ?: "nopassword"
+                    Log.i("[Context] Account fetching buddies")
+
+                    bcsWsHandler?.SetUserInfo(username, domain, password)
+
+                    fetchBuddies(username, domain, password)
+                }
                 notificationsManager.stopForegroundNotificationIfPossible()
+            }
+
+            if (state == RegistrationState.Cleared && account == core.defaultAccount) {
+
+                if (lastAccountIdRegistered?.length != 0) {
+                    Log.i("[Context] Account Removing buddies")
+                    lastAccountIdRegistered = ""
+                    disableSubscriptions()
+                    contactsManager.clearFriends()
+                }
             }
         }
 
@@ -184,6 +215,33 @@ class CoreContext(
                 val model: PresenceModel =
                     core.createPresenceModelWithActivity(PresenceActivity.Type.OnThePhone, null)
                 core.presenceModel = model
+            }
+        }
+
+// + Questa funzione ricava dai WebService la confgurazione dell'utente e successivamente accede alla lista
+        // dei buddy per popolare una lista di Friend nel core di Linphone
+        private fun fetchBuddies(user: String, domain: String, password: String) {
+
+            Log.i("[Context] fetchBuddies START")
+
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val userConf = bcsWsHandler?.fetchUserConf()
+                    if (userConf != null) {
+                        contactsManager.createFriendFromJsonBuddyList(userConf)
+                    }
+                } catch (e: HttpException) {
+                    // Gestione degli errori HTTP
+                    val code = e.code() // Codice di stato HTTP
+                    val errorMessage = e.message() // Messaggio di errore HTTP
+                    Log.e("HTTP Error: $code - $errorMessage")
+                } catch (e: IOException) {
+                    // Gestione degli errori di rete o I/O
+                    Log.e("IO Error: ${e.message}")
+                } catch (e: Exception) {
+                    // Gestione di altri tipi di eccezioni non previsti
+                    Log.e("Error: ${e.message}")
+                }
             }
         }
 
@@ -360,6 +418,11 @@ class CoreContext(
         }
 
         core = Factory.instance().createCoreWithConfig(coreConfig, context)
+
+        val bcswsHost = core.config.getString("bcsws", "host", "") ?: ""
+        val bcswsPort = core.config.getString("bcsws", "port", "") ?: ""
+
+        bcsWsHandler = BcsWsHandler(bcswsHost, bcswsPort)
 
         stopped = false
         _lifecycleRegistry.currentState = Lifecycle.State.CREATED
@@ -1022,6 +1085,81 @@ class CoreContext(
     }
 
     /* VFS */
+
+    // dms begin ************
+    // These functions are needed to enable or disable the buddies subscriptions. The disable function
+    // is not really needed, as it turn out that liblinphone already stops the subscriptions whenever
+    // the app enters the background state
+
+    fun enableSubscriptions() {
+        // dms *****
+        Log.w("[ContactsListViewModel] EnableSubscriptions")
+        // val core: Core = LinphoneApplication.coreContext.core
+
+        if (core != null) {
+            val friendLists = core.friendsLists
+
+            Log.w("[ContactsListViewModel] Checking friend list")
+            for (list in friendLists) {
+                val friends = list.friends
+                for (friend in friends) {
+                    for (address in friend.addresses) {
+                        if (address.isSip) {
+                            Log.w(
+                                "[ContactsListViewModel] Found [",
+                                address.asString(),
+                                "], checking presence status"
+                            )
+                            if (!friend.isSubscribesEnabled) {
+                                Log.w(
+                                    "[ContactsListViewModel] Presence disabled, starting new subscription ", address.asString()
+                                )
+                                friend.edit()
+                                friend.isSubscribesEnabled = true
+                                friend.incSubscribePolicy = SubscribePolicy.SPAccept
+                                friend.done()
+                                break
+                            } else Log.w("[ContactsListViewModel] Presence already enabled", address.asString())
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun disableSubscriptions() {
+        // dms ******
+        Log.w("[ContactsFragment] DisableSubscriptions")
+
+        // val core: Core = LinphoneApplication.coreContext.core
+        if (core != null) {
+            Log.w("[ContactsFragment] Checking friend list")
+            val friendLists = core.friendsLists
+            for (list in friendLists) {
+                val friends = list.friends
+                for (friend in friends) {
+                    for (address in friend.addresses) {
+                        if (address.isSip) {
+                            Log.w(
+                                "[ContactsFragment] Found [",
+                                address.asString(),
+                                "], disabling presence"
+                            )
+                            if (friend.isSubscribesEnabled) {
+                                friend.setSubscribesEnabled(false)
+                            }
+                            // friend.edit()
+                            // friend.isSubscribesEnabled = false
+                            // friend.incSubscribePolicy = SubscribePolicy.SPDeny
+                            // friend.done()
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    }
+// dms end ************
 
     companion object {
         private const val TRANSFORMATION = "AES/GCM/NoPadding"

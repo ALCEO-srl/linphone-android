@@ -33,11 +33,13 @@ import android.util.Patterns
 import androidx.core.app.Person
 import androidx.core.graphics.drawable.IconCompat
 import androidx.lifecycle.MutableLiveData
+import com.google.gson.Gson // dms
 import java.io.IOException
 import kotlinx.coroutines.*
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
+import org.linphone.bcsws.UserConf
 import org.linphone.core.*
 import org.linphone.core.tools.Log
 import org.linphone.utils.ImageUtils
@@ -311,6 +313,46 @@ class ContactsManager(private val context: Context) {
         }
 
         return friend
+    }
+
+    fun clearFriends() {
+        val core = coreContext.core
+        val fl = core.defaultFriendList
+        if (fl != null) {
+            for (friend in fl!!.friends) {
+                fl.removeFriend(friend)
+            }
+        }
+    }
+
+    fun createFriendFromJsonBuddyList(userConf: UserConf) {
+        val core = coreContext.core
+        val gson = Gson()
+
+        val fl = core.defaultFriendList ?: core.createFriendList()
+        for (friend in fl.friends) {
+            fl.removeFriend(friend)
+        }
+
+        if (fl != core.defaultFriendList) core.addFriendList(fl)
+
+        for (group in userConf.Misc.Buddies) {
+            Log.d("[Contacts Manager] Nome del gruppo: ${group.Name}")
+            Log.d("Membri del gruppo:")
+
+            for (buddy in group.Members) {
+                Log.d("   - Nome: ${buddy.DisplayName}")
+                Log.d("     Uri: ${buddy.Uri}")
+                Log.d("     Buddy: ${buddy.Buddy}")
+                val friend = coreContext.core.createFriend()
+                friend.name = buddy.DisplayName
+                friend.isSubscribesEnabled = buddy.Buddy
+                friend.incSubscribePolicy = SubscribePolicy.SPAccept
+                friend.setAddress(core.createAddress(buddy.Uri))
+
+                fl.addLocalFriend(friend)
+            }
+        }
     }
 }
 

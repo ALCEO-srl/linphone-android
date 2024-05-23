@@ -809,6 +809,7 @@
     <string name="content_description_toggle_side_menu">Mostra o nascondi il menu laterale</string>
     <string name="content_description_menu_history">Cronologia delle chiamate</string>
     <string name="content_description_menu_contacts">Contatti</string>
+    <string name="content_description_directory">Rubrica</string>
     <string name="content_description_menu_dialer">Tastierino</string>
     <string name="content_description_menu_chat">Conversazioni</string>
     <string name="content_description_dialer_erase">Rimuovi l\'ultimo carattere</string>

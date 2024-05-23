@@ -104,6 +104,7 @@ internal fun TabsFragment.navigateToCallHistory() {
         R.id.masterContactsFragment -> R.id.action_masterContactsFragment_to_masterCallLogsFragment
         R.id.dialerFragment -> R.id.action_dialerFragment_to_masterCallLogsFragment
         R.id.masterChatRoomsFragment -> R.id.action_masterChatRoomsFragment_to_masterCallLogsFragment
+        R.id.directoryFragment -> R.id.action_directoryFragment_to_masterCallLogsFragment
         else -> R.id.action_global_masterCallLogsFragment
     }
     findNavController().navigate(
@@ -118,6 +119,7 @@ internal fun TabsFragment.navigateToContacts() {
         R.id.masterCallLogsFragment -> R.id.action_masterCallLogsFragment_to_masterContactsFragment
         R.id.dialerFragment -> R.id.action_dialerFragment_to_masterContactsFragment
         R.id.masterChatRoomsFragment -> R.id.action_masterChatRoomsFragment_to_masterContactsFragment
+        R.id.directoryFragment -> R.id.action_directoryFragment_to_masterContactsFragment
         else -> R.id.action_global_masterContactsFragment
     }
     findNavController().navigate(
@@ -132,12 +134,28 @@ internal fun TabsFragment.navigateToDialer() {
         R.id.masterCallLogsFragment -> R.id.action_masterCallLogsFragment_to_dialerFragment
         R.id.masterContactsFragment -> R.id.action_masterContactsFragment_to_dialerFragment
         R.id.masterChatRoomsFragment -> R.id.action_masterChatRoomsFragment_to_dialerFragment
+        R.id.directoryFragment -> R.id.action_directoryFragment_to_dialerFragment
         else -> R.id.action_global_dialerFragment
     }
     findNavController().navigate(
         action,
         null,
         popupTo(R.id.dialerFragment, true)
+    )
+}
+
+internal fun TabsFragment.navigateToDirectory() {
+    val action = when (findNavController().currentDestination?.id) {
+        R.id.masterCallLogsFragment -> R.id.action_masterCallLogsFragment_to_directoryFragment
+        R.id.masterContactsFragment -> R.id.action_masterContactsFragment_to_directoryFragment
+        R.id.masterChatRoomsFragment -> R.id.action_masterChatRoomsFragment_to_directoryFragment
+        R.id.dialerFragment -> R.id.action_dialerFragment_to_directoryFragment
+        else -> R.id.action_global_dialerFragment
+    }
+    findNavController().navigate(
+        action,
+        null,
+        popupTo(R.id.directoryFragment, true)
     )
 }
 

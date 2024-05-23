@@ -12,6 +12,9 @@
             name="contactsClickListener"
             type="android.view.View.OnClickListener"/>
         <variable
+            name="directoryClickListener"
+            type="android.view.View.OnClickListener"/>
+        <variable
             name="dialerClickListener"
             type="android.view.View.OnClickListener"/>
         <variable
@@ -33,21 +36,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            layout_constraintGuide_percent="@{viewModel.leftAnchor, default=0.25}" />
+            layout_constraintGuide_percent="@{viewModel.leftAnchor, default=0.2}" /> <!-- Modificato percentuale -->
 
         <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guidelineMiddle"
+            android:id="@+id/guidelineMiddleLeft"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            layout_constraintGuide_percent="@{viewModel.middleAnchor, default=0.5}" />
+            layout_constraintGuide_percent="@{viewModel.middleLeftAnchor, default=0.4}" /> <!-- Nuova linea guida -->
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineMiddleRight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            layout_constraintGuide_percent="@{viewModel.middleRightAnchor, default=0.6}" /> <!-- Nuova linea guida -->
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            layout_constraintGuide_percent="@{viewModel.rightAnchor, default=0.75}" />
+            layout_constraintGuide_percent="@{viewModel.rightAnchor, default=0.8}" /> <!-- Modificato percentuale -->
 
         <ImageView
             android:id="@+id/history"
@@ -83,7 +93,7 @@
             android:background="@drawable/footer_button"
             android:onClick="@{contactsClickListener}"
             app:layout_constraintStart_toStartOf="@id/guidelineLeft"
-            app:layout_constraintEnd_toEndOf="@id/guidelineMiddle">
+            app:layout_constraintEnd_toEndOf="@id/guidelineMiddleLeft">
 
             <ImageView
                 android:layout_width="match_parent"
@@ -96,20 +106,39 @@
         </RelativeLayout>
 
         <RelativeLayout
-            android:id="@+id/dialer"
+            android:id="@+id/directory"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:background="@drawable/footer_button"
-            android:onClick="@{dialerClickListener}"
-            app:layout_constraintStart_toStartOf="@id/guidelineMiddle"
-            app:layout_constraintEnd_toEndOf="@id/guidelineRight">
+            android:onClick="@{directoryClickListener}"
+            app:layout_constraintStart_toStartOf="@id/guidelineMiddleLeft"
+            app:layout_constraintEnd_toEndOf="@id/guidelineMiddleRight">
 
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
                 android:padding="15dp"
+                android:contentDescription="@string/content_description_directory"
+                android:src="@drawable/footer_directory" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/dialer"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/footer_button"
+            android:onClick="@{dialerClickListener}"
+            app:layout_constraintEnd_toEndOf="@id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@id/guidelineMiddleRight">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
                 android:contentDescription="@string/content_description_menu_dialer"
+                android:padding="15dp"
                 android:src="@drawable/footer_dialer" />
 
         </RelativeLayout>
@@ -148,5 +177,6 @@
             android:background="?attr/accentColor" />
 
     </androidx.constraintlayout.motion.widget.MotionLayout>
+
 
 </layout>

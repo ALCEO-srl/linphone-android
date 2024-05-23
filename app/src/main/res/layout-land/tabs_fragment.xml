@@ -15,6 +15,9 @@
             name="dialerClickListener"
             type="android.view.View.OnClickListener"/>
         <variable
+            name="directoryClickListener"
+            type="android.view.View.OnClickListener"/>
+        <variable
             name="chatClickListener"
             type="android.view.View.OnClickListener"/>
         <variable
