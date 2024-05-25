@@ -136,7 +136,7 @@ class CoreContext(
     private var callOverlay: View? = null
     private var previousCallState = Call.State.Idle
     private lateinit var phoneStateListener: PhoneStateInterface
-    private var lastAccountIdRegistered: String? = ""
+    var lastAccountIdRegistered: String? = ""
 
     private val listener: CoreListenerStub = object : CoreListenerStub() {
         override fun onGlobalStateChanged(core: Core, state: GlobalState, message: String) {
