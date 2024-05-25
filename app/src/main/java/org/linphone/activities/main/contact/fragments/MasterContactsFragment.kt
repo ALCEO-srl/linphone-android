@@ -19,17 +19,13 @@
  */
 package org.linphone.activities.main.contact.fragments
 
-import android.app.Dialog
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.NavHostFragment
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.transition.MaterialSharedAxis
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
@@ -40,7 +36,6 @@ import org.linphone.activities.main.MainActivity
 import org.linphone.activities.main.contact.adapters.ContactsListAdapter
 import org.linphone.activities.main.contact.viewmodels.ContactsListViewModel
 import org.linphone.activities.main.fragments.MasterFragment
-import org.linphone.activities.main.viewmodels.DialogViewModel
 import org.linphone.activities.navigateToContact
 import org.linphone.activities.navigateToContactEditor
 import org.linphone.core.Factory
@@ -139,7 +134,8 @@ class MasterContactsFragment : MasterFragment<ContactMasterFragmentBinding, Cont
 
         val layoutManager = LinearLayoutManager(requireContext())
         binding.contactsList.layoutManager = layoutManager
-
+// dms dms we disable swipe for now
+    /*
         // Swipe action
         val swipeConfiguration = RecyclerViewSwipeConfiguration()
         val white = ContextCompat.getColor(requireContext(), R.color.white_color)
@@ -197,7 +193,7 @@ class MasterContactsFragment : MasterFragment<ContactMasterFragmentBinding, Cont
         }
         RecyclerViewSwipeUtils(ItemTouchHelper.LEFT, swipeConfiguration, swipeListener)
             .attachToRecyclerView(binding.contactsList)
-
+    ***/
         // Divider between items
         binding.contactsList.addItemDecoration(AppUtils.getDividerDecoration(requireContext(), layoutManager))
 

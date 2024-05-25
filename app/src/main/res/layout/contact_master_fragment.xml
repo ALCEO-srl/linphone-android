@@ -101,7 +101,8 @@
                     android:layout_weight="0.2"
                     android:background="?attr/button_background_drawable"
                     android:padding="15dp"
-                    android:src="@drawable/delete" />
+                    android:src="@drawable/delete"
+                    android:visibility="@{viewModel.nativeAddressBookEnabled ? View.VISIBLE : View.GONE}"/>
 
             </LinearLayout>
 

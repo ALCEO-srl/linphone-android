@@ -85,7 +85,7 @@ class ContactsListAdapter(
                         if (friend != null) selectedContactEvent.value = Event(friend)
                     }
                 }
-
+/* //dms
                 setLongClickListener {
                     if (selectionViewModel.isEditionEnabled.value == false) {
                         selectionViewModel.isEditionEnabled.value = true
@@ -93,7 +93,7 @@ class ContactsListAdapter(
                         true
                     }
                     false
-                }
+                }*/
 
                 executePendingBindings()
             }
