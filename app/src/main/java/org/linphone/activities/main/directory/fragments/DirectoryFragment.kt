@@ -1,13 +1,19 @@
 package org.linphone.activities.main.directory.fragments
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.R
 import org.linphone.activities.GenericFragment
 import org.linphone.activities.main.directory.adapters.DirectoryAdapter
@@ -20,35 +26,55 @@ class DirectoryFragment : GenericFragment<DirectoryFragmentBinding>() {
 
     override fun getLayoutId(): Int = R.layout.directory_fragment
 
-   /* override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.directory_fragment, container, false)
-    }*/
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         binding.lifecycleOwner = viewLifecycleOwner
-
+        binding.sharedMainViewModel = sharedViewModel
         binding.viewModel = viewModel
 
         val searchField: EditText = view.findViewById(R.id.searchField)
-        val searchButton: Button = view.findViewById(R.id.searchButton)
+        searchField.setText("")
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                viewModel.updateDirectory(coreContext.fetchDirectory(""))
+                // Usa il risultato come necessario
+            } catch (e: Exception) {
+                Log.e("Error", "Failed to fetch directory: ${e.message}")
+            }
+        }
+
+        searchField.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // Non è necessario fare nulla prima della modifica del testo
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // Qui puoi chiamare la tua funzione di ricerca ogni volta che il testo cambia
+                // Assicurati di gestire il caso in cui il testo è vuoto per ripristinare lo stato precedente
+                val query = s.toString().trim()
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
+                        viewModel.updateDirectory(coreContext.fetchDirectory(query))
+                        // Usa il risultato come necessario
+                    } catch (e: Exception) {
+                        Log.e("Error", "Failed to fetch directory: ${e.message}")
+                    }
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                // Non è necessario fare nulla dopo la modifica del testo
+            }
+        })
+
         val progressBar: ProgressBar = view.findViewById(R.id.progressBar)
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
 
-        adapter = DirectoryAdapter()
+        adapter = DirectoryAdapter(sharedViewModel, requireContext())
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
-
-         searchButton.setOnClickListener {
-            val query = searchField.text.toString()
-            searchField.setText("")
-            viewModel.searchDirectory(query)
-        }
 
         viewModel.directory.observe(
             viewLifecycleOwner,

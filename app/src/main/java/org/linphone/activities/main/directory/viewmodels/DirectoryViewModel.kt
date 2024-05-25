@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
-import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.bcsws.DirectoryItem
 
 class DirectoryViewModel : ViewModel() {
@@ -16,12 +15,19 @@ class DirectoryViewModel : ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
-    fun searchDirectory(filter: String) {
+    private val selectedItem = MutableLiveData<DirectoryItem>()
+
+    fun selectItem(item: DirectoryItem) {
+        selectedItem.value = item
+    }
+
+    fun getSelectedItem(): LiveData<DirectoryItem> = selectedItem
+
+    fun updateDirectory(Items: List<DirectoryItem>) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = coreContext.bcsWsHandler?.fetchDirectory(filter) // Passa il parametro di ricerca al repository
-                _directory.postValue(response?.Items)
+                _directory.postValue(Items)
             } catch (e: Exception) {
                 e.printStackTrace()
                 _directory.postValue(emptyList())

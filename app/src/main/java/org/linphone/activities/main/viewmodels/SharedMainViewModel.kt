@@ -24,6 +24,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.activities.main.history.data.GroupedCallLogData
+import org.linphone.bcsws.DirectoryItem
 import org.linphone.core.*
 import org.linphone.utils.Event
 
@@ -80,6 +81,9 @@ class SharedMainViewModel : ViewModel() {
     }
 
     val selectedContact = MutableLiveData<Friend>()
+
+    // dms
+    val selectedDirectoryItem = MutableLiveData<DirectoryItem>()
 
     // For correct animations directions
     val updateContactsAnimationsBasedOnDestination: MutableLiveData<Event<Int>> by lazy {

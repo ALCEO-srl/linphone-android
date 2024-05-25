@@ -144,6 +144,20 @@
         <action
             android:id="@+id/action_directoryFragment_to_dialerFragment"
             app:destination="@id/dialerFragment" />
+        <action
+            android:id="@+id/action_directoryFragment_to_directoryItemDetailFragment"
+            app:destination="@id/directoryItemDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/directoryItemDetailFragment"
+        android:name="org.linphone.activities.main.directory.fragments.DirectoryItemDetailFragment"
+        tools:layout="@layout/directory_item_detail"
+        android:label="DirectoryItemDetailFragment" >
+
+        <action
+            android:id="@+id/action_directoryItemDetailFragment_to_directoryFragment"
+            app:destination="@id/directoryFragment" />
     </fragment>
 
     <fragment

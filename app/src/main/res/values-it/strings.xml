@@ -82,9 +82,11 @@
 
     <!-- Contacts -->
     <string name="contact_invite_friend">Invita</string>
-    <string name="no_contact">Nessun contatto nella tua rubrica.</string>
-    <string name="no_sip_contact">Nessun contatto SIP nella tua rubrica.</string>
-    <string name="contact_filter_hint">Ricerca contatti</string>
+    <string name="no_contact">La tua lista dei preferiti è vuota.</string>
+    <string name="no_sip_contact">La tua lista dei preferiti è vuota.</string>
+    <string name="contact_filter_hint">Ricerca preferiti</string>
+    <string name="directory_filter_hint">Ricerca rubrica</string>
+
     <string name="contact_send_sms_invite_text">Ciao, unisciti a me su &appName;! Puoi scaricarla gratuitamente su %s</string>
     <string name="contact_last_name">Cognome</string>
     <string name="contact_first_name">Nome</string>
@@ -287,6 +289,20 @@
     <string name="conference_scheduled_cancelled_by_organizer">La riunione è stata anullata dall\'organizzatore</string>
     <string name="conference_scheduled_cancelled_by_me">La riunione è stata anullata dall\'organizzatore</string>
 
+    <!-- dms Dettaglio anagrafica -->
+    <string name="directory_item_detail_uri">Indirizzo SIP</string>
+    <string name="directory_item_detail_profession">Professione</string>
+    <string name="directory_item_detail_company">Azienda</string>
+    <string name="directory_item_detail_emailaddress">E-mail</string>
+    <string name="directory_item_detail_mobilephone">Cellulare</string>
+    <string name="directory_item_detail_landlinephone">Telefono fisso</string>
+    <string name="directory_item_detail_faxphone">Fax</string>
+    <string name="directory_item_detail_title">Titolo</string>
+    <string name="directory_item_detail_address">Indirizzo</string>
+    <string name="directory_item_detail_branch">Reparto</string>
+    <string name="directory_item_detail_office">Ufficio</string>
+    <string name="directory_item_detail_manager">Manager</string>
+    <string name="directory_item_detail_assistant">Assistente</string>
 
     <!-- Call -->
     <string name="call_incoming_title">Chiamata in arrivo</string>

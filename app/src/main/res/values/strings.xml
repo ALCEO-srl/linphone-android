@@ -91,11 +91,26 @@
         <item quantity="other">@string/history_delete_many_dialog</item>
     </plurals>
 
+    <string name="directory_item_detail_uri">SIP address</string>
+    <string name="directory_item_detail_profession">Profession</string>
+    <string name="directory_item_detail_company">Company</string>
+    <string name="directory_item_detail_emailaddress">E-mail</string>
+    <string name="directory_item_detail_mobilephone">Mobile</string>
+    <string name="directory_item_detail_landlinephone">Phone</string>
+    <string name="directory_item_detail_faxphone">Fax</string>
+    <string name="directory_item_detail_title">Title</string>
+    <string name="directory_item_detail_address">Address</string>
+    <string name="directory_item_detail_branch">Branch</string>
+    <string name="directory_item_detail_office">Office</string>
+    <string name="directory_item_detail_manager">Manager</string>
+    <string name="directory_item_detail_assistant">Assistant</string>
+
     <!-- Contacts -->
     <string name="contact_invite_friend">Invite</string>
-    <string name="no_contact">No contact in your address book.</string>
-    <string name="no_sip_contact">No SIP contact in your address book.</string>
-    <string name="contact_filter_hint">Search contacts</string>
+    <string name="no_contact">No favorites in your list.</string>
+    <string name="no_sip_contact">No favorites in your list.</string>
+    <string name="contact_filter_hint">Search favorites</string>
+    <string name="directory_filter_hint">Search address book</string>
     <string name="contact_send_sms_invite_text">Hello, join me on &appName;! You can download it for free at %s</string>
     <string name="contact_send_sms_invite_download_link" translatable="false">https://linphone.org/download</string>
     <string name="contact_last_name">Last name</string>

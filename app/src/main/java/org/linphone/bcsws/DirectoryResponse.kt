@@ -1,5 +1,6 @@
 package org.linphone.bcsws
 
+import java.io.Serializable
 data class DirectoryResponse(
     val Count: Int,
     val Items: List<DirectoryItem>
@@ -34,4 +35,4 @@ data class DirectoryItem(
     val Attr9: String,
     val Attr10: String,
     val AvatarImageUrl: String
-)
+) : Serializable

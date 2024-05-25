@@ -55,6 +55,7 @@ import org.linphone.LinphoneApplication
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.bcsws.BcsWsHandler
+import org.linphone.bcsws.DirectoryItem
 import org.linphone.compatibility.Compatibility
 import org.linphone.compatibility.PhoneStateInterface
 import org.linphone.contact.ContactLoader
@@ -86,6 +87,8 @@ class CoreContext(
     }
 
     var bcsWsHandler: BcsWsHandler? = null
+
+    private var bcsDirectoryItems: List<DirectoryItem>? = null
 
     private val contactLoader = ContactLoader()
 
@@ -1158,6 +1161,66 @@ class CoreContext(
                 }
             }
         }
+    }
+
+    public suspend fun fetchDirectory(query: String): List<DirectoryItem> {
+
+        if (bcsDirectoryItems == null) {
+            try {
+                var directoryResponse = bcsWsHandler?.fetchDirectory("")
+                bcsDirectoryItems = directoryResponse?.Items
+            } catch (e: HttpException) {
+                // Gestione degli errori HTTP
+                val code = e.code() // Codice di stato HTTP
+                val errorMessage = e.message() // Messaggio di errore HTTP
+                Log.e("HTTP Error: $code - $errorMessage")
+                bcsDirectoryItems = null
+            } catch (e: IOException) {
+                // Gestione degli errori di rete o I/O
+                Log.e("IO Error: ${e.message}")
+                bcsDirectoryItems = null
+            } catch (e: Exception) {
+                // Gestione di altri tipi di eccezioni non previsti
+                Log.e("Error: ${e.message}")
+                bcsDirectoryItems = null
+            }
+        }
+        if (bcsDirectoryItems == null) {
+            bcsDirectoryItems = emptyList()
+        }
+
+        val result = bcsDirectoryItems!!.filter { item ->
+            item.Id.contains(query, ignoreCase = true) ||
+                item.Uri.contains(query, ignoreCase = true) ||
+                item.Name.contains(query, ignoreCase = true) ||
+                item.Surname.contains(query, ignoreCase = true) ||
+                item.DisplayName.contains(query, ignoreCase = true) ||
+                item.Profession.contains(query, ignoreCase = true) ||
+                item.Company.contains(query, ignoreCase = true) ||
+                item.EmailAddress.contains(query, ignoreCase = true) ||
+                item.MobilePhone.contains(query, ignoreCase = true) ||
+                item.LandlinePhone.contains(query, ignoreCase = true) ||
+                item.FaxPhone.contains(query, ignoreCase = true) ||
+                item.Title.contains(query, ignoreCase = true) ||
+                item.Address.contains(query, ignoreCase = true) ||
+                item.Branch.contains(query, ignoreCase = true) ||
+                item.Office.contains(query, ignoreCase = true) ||
+                item.Manager.contains(query, ignoreCase = true) ||
+                item.Assistant.contains(query, ignoreCase = true) ||
+                item.Attr1.contains(query, ignoreCase = true) ||
+                item.Attr2.contains(query, ignoreCase = true) ||
+                item.Attr3.contains(query, ignoreCase = true) ||
+                item.Attr4.contains(query, ignoreCase = true) ||
+                item.Attr5.contains(query, ignoreCase = true) ||
+                item.Attr6.contains(query, ignoreCase = true) ||
+                item.Attr7.contains(query, ignoreCase = true) ||
+                item.Attr8.contains(query, ignoreCase = true) ||
+                item.Attr9.contains(query, ignoreCase = true) ||
+                item.Attr10.contains(query, ignoreCase = true) ||
+                item.AvatarImageUrl.contains(query, ignoreCase = true)
+        }
+
+        return result
     }
 // dms end ************
 

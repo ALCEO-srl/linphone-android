@@ -1,14 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <TextView
-        android:id="@+id/displayName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Display Name"
-        android:textSize="16sp"/>
-</LinearLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="?attr/backgroundColor"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/avatar"
+            android:layout_width="@dimen/contact_avatar_size"
+            android:layout_height="@dimen/contact_avatar_size"
+            android:layout_marginRight="10dp"
+            android:layout_centerVertical="true"
+            android:background="@drawable/generated_avatar_bg"
+            android:src="@drawable/voip_single_contact_avatar"
+            android:contentDescription="@null" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/avatar">
+
+            <org.linphone.views.MarqueeTextView
+                android:id="@+id/directoryItemDisplayName"
+                style="@style/contact_name_list_cell_font"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:singleLine="true" />
+
+            <org.linphone.views.MarqueeTextView
+                android:id="@+id/directoryItemOrganization"
+                style="@style/contact_organization_font"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:singleLine="true" />
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+
+</layout>
