@@ -30,7 +30,8 @@
             android:marqueeRepeatLimit="marquee_forever"
             android:textIsSelectable="true"
             android:scrollHorizontally="true"
-            android:singleLine="true" />
+            android:singleLine="true"
+            android:layout_marginTop="8dp"/>
 
         <TextView
             android:text="@{data.caption}"
@@ -38,7 +39,8 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:textColor="?attr/primarySubtextDarkColor"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -49,6 +51,7 @@
             <ImageView
                 android:visibility="@{data.isCallable ? View.VISIBLE : View.GONE}"
                 android:contentDescription="@string/content_description_start_call"
+                android:onClick="@{() -> data.startCall()}"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_margin="10dp"
@@ -58,6 +61,7 @@
             <ImageView
                 android:visibility="@{data.isSipAddress ? View.VISIBLE : View.GONE}"
                 android:contentDescription="@string/content_description_start_chat"
+                android:onClick="@{() -> data.startChat()}"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_margin="10dp"

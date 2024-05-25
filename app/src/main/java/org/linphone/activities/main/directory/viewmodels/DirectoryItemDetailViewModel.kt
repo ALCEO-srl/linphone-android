@@ -4,14 +4,20 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import org.linphone.R
 import org.linphone.activities.main.directory.data.DirectoryItemData
+import org.linphone.activities.main.directory.data.DirectoryItemDataDestinationClickListener
 import org.linphone.bcsws.DirectoryItem
+import org.linphone.core.Address
 import org.linphone.utils.AppUtils.Companion.getString
 
 class DirectoryItemDetailViewModel : ViewModel() {
     val mainCaption: MutableLiveData<String> = MutableLiveData<String>()
     val company: MutableLiveData<String> = MutableLiveData<String>()
     val items = MutableLiveData<ArrayList<DirectoryItemData>>()
-    fun setItem(directoryItem: DirectoryItem) {
+
+    fun setItem(
+        directoryItem: DirectoryItem,
+        destinationClickListener: DirectoryItemDataDestinationClickListener
+    ) {
         mainCaption.value = when {
             directoryItem.DisplayName.isNotEmpty() -> directoryItem.DisplayName
             directoryItem.Name.isNotEmpty() || directoryItem.Surname.isNotEmpty() -> "${directoryItem.Name} ${directoryItem.Surname}"
@@ -23,13 +29,13 @@ class DirectoryItemDetailViewModel : ViewModel() {
 
         val list = arrayListOf<DirectoryItemData>()
         if (directoryItem.Uri.isNotEmpty()) {
-            list.add(DirectoryItemData(true, getString(R.string.directory_item_detail_uri), directoryItem.Uri, true))
+            list.add(DirectoryItemData(true, getString(R.string.directory_item_detail_uri), directoryItem.Uri, destinationClickListener, true))
         }
         if (directoryItem.MobilePhone.isNotEmpty()) {
-            list.add(DirectoryItemData(false, getString(R.string.directory_item_detail_mobilephone), directoryItem.MobilePhone, true))
+            list.add(DirectoryItemData(false, getString(R.string.directory_item_detail_mobilephone), directoryItem.MobilePhone, destinationClickListener, true))
         }
         if (directoryItem.LandlinePhone.isNotEmpty()) {
-            list.add(DirectoryItemData(false, getString(R.string.directory_item_detail_landlinephone), directoryItem.LandlinePhone, true))
+            list.add(DirectoryItemData(false, getString(R.string.directory_item_detail_landlinephone), directoryItem.LandlinePhone, destinationClickListener, true))
         }
         if (directoryItem.FaxPhone.isNotEmpty()) {
             list.add(DirectoryItemData(false, getString(R.string.directory_item_detail_faxphone), directoryItem.FaxPhone))

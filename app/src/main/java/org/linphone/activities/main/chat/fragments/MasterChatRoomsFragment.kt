@@ -43,7 +43,10 @@ import org.linphone.activities.main.fragments.MasterFragment
 import org.linphone.activities.main.viewmodels.DialogViewModel
 import org.linphone.activities.navigateToChatRoom
 import org.linphone.activities.navigateToChatRoomCreation
+import org.linphone.core.Address
 import org.linphone.core.ChatRoom
+import org.linphone.core.ChatRoomBackend
+import org.linphone.core.ChatRoomParams
 import org.linphone.core.Factory
 import org.linphone.core.tools.Log
 import org.linphone.databinding.ChatRoomMasterFragmentBinding
@@ -316,10 +319,27 @@ class MasterChatRoomsFragment : MasterFragment<ChatRoomMasterFragmentBinding, Ch
             arguments?.clear()
             val localAddress = Factory.instance().createAddress(localSipUri)
             val remoteSipAddress = Factory.instance().createAddress(remoteSipUri)
-            val chatRoom = coreContext.core.searchChatRoom(null, localAddress, remoteSipAddress, arrayOfNulls(0))
+            var chatRoom = coreContext.core.searchChatRoom(null, localAddress, remoteSipAddress, arrayOfNulls(0))
             if (chatRoom != null) {
                 Log.i("[Chat] Found matching chat room $chatRoom")
                 adapter.selectedChatRoomEvent.value = Event(chatRoom)
+            } else {
+                // dms ***
+                val addresses = arrayOfNulls<Address>(1)
+
+                addresses[0] = coreContext.core.createAddress(remoteSipUri)
+                val params: ChatRoomParams = coreContext.core.createDefaultChatRoomParams()
+                params.backend = ChatRoomBackend.Basic
+                params.isGroupEnabled = false
+                params.ephemeralLifetime = 0
+                chatRoom = coreContext.core.createChatRoom(params, coreContext.core.defaultAccount?.params?.identityAddress, addresses)
+                if (chatRoom != null) {
+                    Log.e("[Chat Room Group Info] Created new chat room!")
+                    adapter.selectedChatRoomEvent.value = Event(chatRoom)
+                } else
+                    Log.i("[Chat] Could not create  the new chat room")
+
+                // ****
             }
         } else {
             sharedViewModel.textToShare.observe(
