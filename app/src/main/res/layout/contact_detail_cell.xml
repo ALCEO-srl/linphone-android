@@ -34,7 +34,7 @@
                 android:textColor="?attr/primarySubtextDarkColor" />
 
             <ImageView
-                android:visibility="@{data.hasPresence ? View.VISIBLE : View.GONE}"
+                android:visibility="@{View.GONE}"
                 android:contentDescription="@string/content_description_linphone_user"
                 android:layout_width="20dp"
                 android:layout_height="20dp"

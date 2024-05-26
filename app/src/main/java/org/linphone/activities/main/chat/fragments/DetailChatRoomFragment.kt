@@ -929,12 +929,16 @@ class DetailChatRoomFragment : MasterFragment<ChatRoomDetailFragmentBinding, Cha
         }
 
         if (viewModel.basicChatRoom || viewModel.oneToOneChatRoom) {
+            /* //dms
             if (viewModel.contact.value != null) {
                 popupView.addToContactsHidden = true
             } else {
                 popupView.goToContactHidden = true
-            }
-
+            }*/
+            // dms
+            popupView.addToContactsHidden = true
+            popupView.goToContactHidden = true
+            // dms
             popupView.meetingHidden = true
             totalSize -= itemSize
         } else {
