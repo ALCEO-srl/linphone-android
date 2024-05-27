@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
+import org.linphone.core.tools.Log
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Field
@@ -123,7 +124,8 @@ class BcsWsHandler(server: String, port: String) {
 
     suspend fun requestAuthToken() {
         // Controllo se il bearerToken è vuoto
-        if (bearerToken.isEmpty()) {
+        Log.i("requestAuthToken(): Current bearerToken [$bearerToken]")
+        if (bearerToken.isNullOrEmpty()) {
             val credentials = Credentials.basic(user + "@" + domain, password)
 
             // Richiesta di un nuovo token di autenticazione
@@ -131,7 +133,9 @@ class BcsWsHandler(server: String, port: String) {
             if (authResponse != null) {
                 // Assegnazione del nuovo token
                 bearerToken = authResponse.access_token
+                Log.i("requestAuthToken(): New bearerToken [$bearerToken]")
             } else {
+                Log.i("requestAuthToken(): Request failed")
                 // Gestione del caso in cui l'authResponse è nullo
                 throw IllegalStateException("Authentication failed: authResponse is null")
             }

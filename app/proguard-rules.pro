@@ -22,3 +22,21 @@
 
 -keep public class * extends androidx.fragment.app.Fragment { *; }
 -dontwarn com.google.errorprone.annotations.Immutable
+
+-keepattributes *Annotation*
+
+# Retrofit
+-keep class retrofit2.** { *; }
+-keep class okhttp3.** { *; }
+
+# Gson
+-keep class com.google.gson.** { *; }
+
+-keep class  org.linphone.bcsws.UserConf { *; }
+-keep class  org.linphone.bcsws.Member { *; }
+-keep class  org.linphone.bcsws.Buddy { *; }
+-keep class  org.linphone.bcsws.Misc { *; }
+-keep class  org.linphone.bcsws.AuthResponse { *; }
+-keep class  org.linphone.bcsws.DirectoryResponse { *; }
+-keep class  org.linphone.bcsws.DirectoryItem { *; }
+-keep class  org.linphone.bcsws.** { *; }
