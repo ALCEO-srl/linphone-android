@@ -19,10 +19,11 @@ use_cpim=1
 zrtp_key_agreements_suites=MS_ZRTP_KEY_AGREEMENT_K255_KYB512
 chat_messages_aggregation_delay=1000
 chat_messages_aggregation=1
+#dms
 verify_server_certs=0
 verify_server_cn=0
 store_ha1_passwd=0
-
+###
 #keepalive_period=0
 #tcp_tls_keepalive=0
 

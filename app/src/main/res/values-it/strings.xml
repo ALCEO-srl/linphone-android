@@ -39,7 +39,7 @@
 
     <plurals name="days">
         <item quantity="one">%d giorno</item>
-        <item quantity="many">%d giorni</item>
+        <item quantity="other">%d giorni</item>
     </plurals>
     <string name="share_uploaded_logs_link">Condividi il link ai log usando…</string>
 
@@ -200,7 +200,7 @@
     <string name="chat_message_voice_recording_playback_low_volume">Il volume dei media è basso, si consiglia di aumentarlo</string>.
     <plurals name="chat_room_unread_messages_event">
         <item quantity="one">%1$d messaggio non letto</item>
-        <item quantity="many">%1$d messaggi non letti</item>
+        <item quantity="other">%1$d messaggi non letti</item>
     </plurals>
     <string name="chat_message_removal_info">Il messaggio sarà eliminato</string>.
     <string name="chat_message_abort_removal">Interrompi</string>
