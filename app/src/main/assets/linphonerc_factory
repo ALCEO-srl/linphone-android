@@ -58,15 +58,11 @@ settings_contacts=0
 enable_native_address_book=0
 show_new_contact_account_dialog=0
 store_presence_in_native_contact=0
-turnrealm=alceo.com
-turnusername=usralceo
-turnuserpassword=S3cretPa55word
-turnserver=sturn.semki.it
-outboundproxy=sip:95.110.191.232:18061;transport=tls
+outboundproxy=sip:bcsgate.com;transport=tls
 
 [bcsws]
-host=bcsws.alceo.com
-port=48097
+host=bcsgate.com
+port=443
 
 [assistant]
 xmlrpc_url=https://subscribe.linphone.org:444/wizard.php

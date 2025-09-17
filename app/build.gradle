@@ -5,7 +5,7 @@ plugins {
     id 'org.jlleitschuh.gradle.ktlint'
 }
 
-def appVersionName = "5.0.0"
+def appVersionName = "5.2.0"
 def appVersionCode = 50000
 
 static def getPackageName() {
@@ -32,7 +32,7 @@ task getGitVersion() {
     def gitCommitHash = new ByteArrayOutputStream()
 
     try {
-        exec {
+ /*       exec {
             executable "git" args "describe", "--abbrev=0"
             standardOutput = gitVersionStream
         }
@@ -43,17 +43,17 @@ task getGitVersion() {
         exec {
             executable "git" args "rev-parse", "--short", "HEAD"
             standardOutput = gitCommitHash
-        }
+        }*/
         exec {
             executable "git" args "name-rev", "--name-only", "HEAD"
             standardOutput = gitBranch
         }
-
+/*
         if (gitCommitsCount.toString().toInteger() == 0) {
             gitVersion = gitVersionStream.toString().trim()
         } else {
             gitVersion = gitVersionStream.toString().trim() + "." + gitCommitsCount.toString().trim() + "+" + gitCommitHash.toString().trim()
-        }
+        }*/
         println("Git version: " + gitVersion + " (" + appVersionCode + ")")
     } catch (ignored) {
         println("Git not found, using " + gitVersion + " (" + appVersionCode + ")")

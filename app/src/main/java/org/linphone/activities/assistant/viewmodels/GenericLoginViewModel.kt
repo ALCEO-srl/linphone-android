@@ -19,10 +19,13 @@
  */
 package org.linphone.activities.assistant.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.core.*
 import org.linphone.core.tools.Log
@@ -119,6 +122,21 @@ class GenericLoginViewModel(private val accountCreator: AccountCreator) : ViewMo
         leaveAssistantEvent.value = Event(true)
     }
 
+    fun readTurnConfig(context: Context): Map<String, String> {
+        val configMap = mutableMapOf<String, String>()
+
+        context.assets.open("turn_default").use { inputStream ->
+            BufferedReader(InputStreamReader(inputStream)).useLines { lines ->
+                lines.forEach { line ->
+                    if (line.isNotBlank() && !line.startsWith("#")) {
+                        val (key, value) = line.split("=")
+                        configMap[key.trim()] = value.trim()
+                    }
+                }
+            }
+        }
+        return configMap
+    }
     fun createProxyConfig() {
         waitForServerAnswer.value = true
         coreContext.core.addListener(coreListener)
@@ -142,10 +160,13 @@ class GenericLoginViewModel(private val accountCreator: AccountCreator) : ViewMo
 
         // dms begin ************
         // We set the default value direct from the linphonerc conf file
-        val turnusername: String = coreContext.core.config.getString("app", "turnusername", "")!!
-        val turnuserpassword = coreContext.core.config.getString("app", "turnuserpassword", "")
-        val turnrealm = coreContext.core.config.getString("app", "turnrealm", "")
-        val turnserver = coreContext.core.config.getString("app", "turnserver", "")!!
+
+        val turnConfig = readTurnConfig(coreContext.context)
+        val turnusername = turnConfig["turnusername"] ?: ""
+        val turnuserpassword = turnConfig["turnuserpassword"] ?: ""
+        val turnrealm = turnConfig["turnrealm"] ?: ""
+        val turnserver = turnConfig["turnserver"] ?: ""
+
         val outboundproxy = coreContext.core.config.getString("app", "outboundproxy", "")!!
 
         val authInfo = coreContext.core.findAuthInfo(turnrealm, turnusername, null)

@@ -25,23 +25,26 @@ import retrofit2.http.Query
 // Definizione dell'interfaccia Retrofit per le chiamate al webservice
 interface BcsWsService {
     @FormUrlEncoded
-    @POST("bcsws/v1/domains/{domain}/authtoken")
+    @POST("{clientid}/bcsws/v1/domains/{domain}/authtoken")
     suspend fun requestAuthToken(
         @Header("Authorization") authorization: String,
+        @Path("clientid") cliendid: String,
         @Path("domain") domain: String,
         @Field("grant_type") grantType: String = "client_credentials"
     ): AuthResponse
 
-    @GET("bcsws/v1/domains/{domain}/users/{user}")
+    @GET("{clientid}/bcsws/v1/domains/{domain}/users/{user}")
     suspend fun getUserConf(
         @Header("Authorization") bearerToken: String,
+        @Path("clientid") cliendid: String,
         @Path("domain") domain: String,
         @Path("user") user: String
     ): UserConf
 
-    @GET("bcsws/v1/domains/{domain}/directory")
+    @GET("{clientid}/bcsws/v1/domains/{domain}/directory")
     suspend fun getDirectory(
         @Header("Authorization") bearerToken: String,
+        @Path("clientid") cliendid: String,
         @Path("domain") domain: String,
         @Query("limit") limit: String,
         @Query("filter") filter: String
@@ -103,7 +106,8 @@ class BcsWsHandler(server: String, port: String) {
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://$server:$port/")
         .addConverterFactory(GsonConverterFactory.create())
-        .client(getUnsafeOkHttpClient().build())
+        // .client(getUnsafeOkHttpClient().build())
+        .client(OkHttpClient.Builder().build())
         .build()
 
     private val bcsWsService = retrofit.create(BcsWsService::class.java)
@@ -111,14 +115,14 @@ class BcsWsHandler(server: String, port: String) {
     suspend fun fetchUserConf(): UserConf {
         return withContext(Dispatchers.IO) {
             requestAuthToken()
-            bcsWsService.getUserConf("Bearer $bearerToken", domain, user)
+            bcsWsService.getUserConf("Bearer $bearerToken", domain, domain, user)
         }
     }
 
     suspend fun fetchDirectory(filter: String = ""): DirectoryResponse {
         return withContext(Dispatchers.IO) {
             requestAuthToken()
-            bcsWsService.getDirectory("Bearer $bearerToken", domain, "10000", filter)
+            bcsWsService.getDirectory("Bearer $bearerToken", domain, domain, "10000", filter)
         }
     }
 
@@ -129,7 +133,7 @@ class BcsWsHandler(server: String, port: String) {
             val credentials = Credentials.basic(user + "@" + domain, password)
 
             // Richiesta di un nuovo token di autenticazione
-            val authResponse = bcsWsService.requestAuthToken(credentials, domain)
+            val authResponse = bcsWsService.requestAuthToken(credentials, domain, domain)
             if (authResponse != null) {
                 // Assegnazione del nuovo token
                 bearerToken = authResponse.access_token
