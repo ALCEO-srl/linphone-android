@@ -23,10 +23,8 @@ import android.app.Dialog
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.NavHostFragment
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.transition.MaterialSharedAxis
@@ -122,13 +120,43 @@ class MasterCallLogsFragment : MasterFragment<HistoryMasterFragmentBinding, Call
         binding.callLogsList.adapter = adapter
 
         binding.setEditClickListener {
-            listSelectionViewModel.isEditionEnabled.value = true
+            // dms qui è il punto in cui viene abilitata la selezione degli elementi da
+            // cancellare. Sovrascriviamo il tutto per chiedere la rimozione di tutto il registro
+
+            // dms  listSelectionViewModel.isEditionEnabled.value = true
+            val viewModel = DialogViewModel(getString(R.string.history_delete_all))
+            val dialog: Dialog = DialogUtils.getDialog(requireContext(), viewModel)
+
+            viewModel.showCancelButton {
+
+                dialog.dismiss()
+            }
+
+            viewModel.showDeleteButton(
+                {
+                   /* val deletedCallGroup = adapter.currentList[index]
+                    listViewModel.deleteCallLogGroup(deletedCallGroup)
+                    if (!binding.slidingPane.isSlideable &&
+                        deletedCallGroup.lastCallLog.callId == sharedViewModel.selectedCallLogGroup.value?.lastCallLog?.callId
+                    ) {
+                        Log.i("[History] Currently displayed history has been deleted, removing detail fragment")
+                        clearDisplayedCallHistory()
+                    }*/
+
+                    listViewModel.clearCallLog()
+
+                    dialog.dismiss()
+                },
+                getString(R.string.dialog_ok)
+            )
+            dialog.show()
         }
 
         val layoutManager = LinearLayoutManager(requireContext())
         binding.callLogsList.layoutManager = layoutManager
 
         // Swipe action
+      /*  //dms
         val swipeConfiguration = RecyclerViewSwipeConfiguration()
         val white = ContextCompat.getColor(requireContext(), R.color.white_color)
 
@@ -172,9 +200,9 @@ class MasterCallLogsFragment : MasterFragment<HistoryMasterFragmentBinding, Call
                 dialog.show()
             }
         }
-        RecyclerViewSwipeUtils(ItemTouchHelper.LEFT, swipeConfiguration, swipeListener)
-            .attachToRecyclerView(binding.callLogsList)
-
+        // dms RecyclerViewSwipeUtils(ItemTouchHelper.LEFT, swipeConfiguration, swipeListener)
+        // dms    .attachToRecyclerView(binding.callLogsList)
+*/
         // Divider between items
         binding.callLogsList.addItemDecoration(AppUtils.getDividerDecoration(requireContext(), layoutManager))
 

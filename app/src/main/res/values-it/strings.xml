@@ -79,6 +79,7 @@
     <string name="no_conference_call_history">Nessuna chiamata di conferneza nella cronologia</string>
     <string name="history_delete_one_dialog">Vuoi eliminare questa chiamata? </string>
     <string name="history_delete_many_dialog">Vuoi eliminare queste chiamate? </string>
+    <string name="history_delete_all">Cancellare la cronologia chiamate?</string>
 
     <!-- Contacts -->
     <string name="contact_invite_friend">Invita</string>

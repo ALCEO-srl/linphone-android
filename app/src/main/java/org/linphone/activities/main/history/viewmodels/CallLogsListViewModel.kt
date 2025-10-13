@@ -21,6 +21,9 @@ package org.linphone.activities.main.history.viewmodels
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.activities.main.history.data.GroupedCallLogData
 import org.linphone.contact.ContactsUpdatedListenerStub
@@ -43,7 +46,9 @@ class CallLogsListViewModel : ViewModel() {
 
     private val listener: CoreListenerStub = object : CoreListenerStub() {
         override fun onCallLogUpdated(core: Core, log: CallLog) {
-            updateCallLogs()
+
+            Log.i("[onCallLogUpdated] callid=${log.callId} status=${log.status} error=${log.errorInfo?.phrase}")
+            // dms updateCallLogs() // dms calllog
         }
     }
 
@@ -144,17 +149,33 @@ class CallLogsListViewModel : ViewModel() {
 
         return list
     }
-
+// dms ********* Her we clear all the call log
+    public fun clearCallLog() {
+        coreContext.clearCallLog()
+        callLogs.value.orEmpty().forEach(GroupedCallLogData::destroy)
+        callLogs.value = computeCallLogs(emptyArray<CallLog>(), missed = false, conference = false)
+    }
+    // dms *********
     private fun updateCallLogs() {
         callLogs.value.orEmpty().forEach(GroupedCallLogData::destroy)
+        // dms Old code, we don't use anymore linphone core calllog
+        // callog val allCallLogs = coreContext.core.callLogs
+        //
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val allCallLogs = coreContext.fetchCallLog()
 
-        val allCallLogs = coreContext.core.callLogs
-        Log.i("[Call Logs] ${allCallLogs.size} call logs found")
+                Log.i("[Call Logs] ${allCallLogs.size} call logs found")
 
-        callLogs.value = when (filter.value) {
-            CallLogsFilter.MISSED -> computeCallLogs(allCallLogs, missed = true, conference = false)
-            CallLogsFilter.CONFERENCE -> computeCallLogs(allCallLogs, missed = false, conference = true)
-            else -> computeCallLogs(allCallLogs, missed = false, conference = false)
+                callLogs.value = when (filter.value) {
+                    CallLogsFilter.MISSED -> computeCallLogs(allCallLogs, missed = true, conference = false)
+                    CallLogsFilter.CONFERENCE -> computeCallLogs(allCallLogs, missed = false, conference = true)
+                    else -> computeCallLogs(allCallLogs, missed = false, conference = false)
+                }
+                allCallLogs.forEach { callLog -> coreContext.core.removeCallLog(callLog) }
+            } catch (e: Exception) {
+                android.util.Log.e("Error", "Failed to fetch calllog: ${e.message}")
+            }
         }
     }
 }

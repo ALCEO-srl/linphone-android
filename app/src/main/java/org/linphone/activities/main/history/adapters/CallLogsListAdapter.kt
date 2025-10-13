@@ -79,21 +79,24 @@ class CallLogsListAdapter(
                 }
 
                 setClickListener {
+                    selectedCallLogEvent.value = Event(callLogGroup) // dms
+                    /*  // dms changing the default behaviour
                     if (selectionViewModel.isEditionEnabled.value == true) {
                         selectionViewModel.onToggleSelect(bindingAdapterPosition)
                     } else {
                         startCallToEvent.value = Event(callLogGroup)
-                    }
+                    }*/
                 }
 
-                setLongClickListener {
+                /*  //dms setLongClickListener {
+
                     if (selectionViewModel.isEditionEnabled.value == false) {
                         selectionViewModel.isEditionEnabled.value = true
                         // Selection will be handled by click listener
                         true
                     }
                     false
-                }
+                }*/
 
                 // This listener is disabled when in edition mode
                 setDetailsClickListener {

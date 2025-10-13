@@ -43,6 +43,9 @@ import java.nio.charset.StandardCharsets
 import java.security.KeyStore
 import java.security.MessageDigest
 import java.text.Collator
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -55,7 +58,10 @@ import org.linphone.LinphoneApplication
 import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.bcsws.BcsWsHandler
+import org.linphone.bcsws.CallReportItem
+import org.linphone.bcsws.CallReportResponse
 import org.linphone.bcsws.DirectoryItem
+import org.linphone.bcsws.RemoteParty
 import org.linphone.compatibility.Compatibility
 import org.linphone.compatibility.PhoneStateInterface
 import org.linphone.contact.ContactLoader
@@ -332,6 +338,15 @@ class CoreContext(
                 if (core.callsNb == 0) {
                     changeStatusToOnline(core)
                 }
+                // dms call log updating 02/10/2025
+
+                if (state == Call.State.End || state == Call.State.Error)
+                    try {
+                        updateCallLog(call)
+                    } catch (e: Exception) {
+                        android.util.Log.e("Error", "Failed to update calllog: ${e.message}")
+                    }
+
                 // dms END ********** dms
 
                 if (state == Call.State.Error) {
@@ -1222,6 +1237,207 @@ class CoreContext(
 
         return result
     }
+
+    // dms
+    public fun clearCallLog() {
+        core.clearCallLogs()
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                bcsWsHandler?.clearAllCallReportItems()
+                Log.i("CallReport", "All call report items cleared.")
+            } catch (e: Exception) {
+                Log.e("CallReport", "Error clearing all call report items: ${e.message}")
+            }
+        }
+    }
+
+    public fun updateCallLog(call: Call) {
+        val Duration = call.duration
+        var Direction = "incoming"
+        if (call.dir == Call.Dir.Outgoing)
+            Direction = "outgoing"
+        val IsConnected = call.duration > 0 // maybe not a good idea, who knows?
+
+        val nowInstant = Instant.now()
+        val adjustedInstant = if (Duration > 0)
+            nowInstant.minusSeconds(Duration.toLong())
+        else
+            nowInstant
+        val unixTimestamp = nowInstant.epochSecond
+
+        // Formatter ISO 8601 in UTC, con suffisso Z
+        val Timestamp = DateTimeFormatter
+            .ISO_INSTANT
+            .withZone(ZoneOffset.UTC)
+            .format(adjustedInstant)
+
+        val RemoteUri = call.remoteAddress.asStringUriOnly()
+        val RemoteDisplayName = call.remoteAddress?.displayName ?: ""
+        //     }
+
+        Log.w("[updateCallLog] Call error reason is ${call.errorInfo.protocolCode} / ${call.errorInfo.reason} / ${call.errorInfo.phrase}")
+        Log.i("[updateCallLog] RemoteUri=$RemoteUri RemoteDisplayName=$RemoteDisplayName Dir=$Direction")
+        Log.i("[updateCallLog] Timestamp=$Timestamp Duration=$Duration IsConnected=$IsConnected")
+
+        var TermReason = "normal"
+        var TermSipReason = 0
+        if (call.state == Call.State.Error) {
+            TermSipReason = call.errorInfo.protocolCode
+            TermReason = when (call.errorInfo.reason) {
+                Reason.Busy -> "remote-reject"
+                Reason.IOError -> "network-error"
+                Reason.NotAcceptable -> context.getString(R.string.call_error_incompatible_media_params)
+                Reason.NotFound -> "sip-reason"
+                Reason.ServerTimeout -> "network-error"
+                Reason.TemporarilyUnavailable -> context.getString(R.string.call_error_temporarily_unavailable)
+                Reason.AddressIncomplete -> "bad-address"
+                else -> "sip-reason"
+            }
+
+            //  not-applicable, normal, internal-error, network-error, , sip-reason,
+            //  sip-remote-cancelled, sip-proxy-cancelled, sip-local-cancelled, generic-fail,
+            //  audio-ice-create-failed, audio-ice-checks-failed, dialog-interrupted, local-reject,
+            //  remote-bye-without-ack, remote-disconnected, remote-reject, local-bye-without-ack,
+            //  local-timeout, cancelled-by-forking
+        } else if (call.state == Call.State.End) {
+            if (call.dir == Call.Dir.Outgoing &&
+                call.errorInfo.reason == Reason.Declined
+            ) {
+                TermReason = "remote-reject"
+                TermSipReason = call.errorInfo.protocolCode
+            }
+            if (call.dir == Call.Dir.Incoming &&
+                call.errorInfo.phrase == "Call completed elsewhere"
+            ) {
+                Log.i("[updateCallLog] TermReason=Call completed elsewhere...exiting")
+                return
+            }
+            if (call.dir == Call.Dir.Incoming &&
+                call.errorInfo.protocolCode == 603 &&
+                call.errorInfo.reason == Reason.Declined
+            ) {
+                if (call.errorInfo.phrase == "Declined elsewhere") {
+                    Log.i("[updateCallLog] TermReason=Declined elsewhere...exiting")
+                    return
+                } else {
+                    TermReason = "local-reject"
+                    TermSipReason = call.errorInfo.protocolCode
+                }
+            } //
+            if (call.dir == Call.Dir.Incoming &&
+                call.errorInfo.protocolCode == 0 &&
+                call.errorInfo.reason == Reason.NotAnswered
+            ) { //  [updateCallLog] Call error reason is 0 / NotAnswered / Incoming call cancelled
+                TermReason = "sip-remote-cancelled"
+                TermSipReason = 0 // 487
+            } //
+        }
+
+        Log.i("[updateCallLog] TermReason=$TermReason TermSipReason=$TermSipReason ")
+
+        try {
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val newCall = CallReportItem(
+                        Id = "",
+                        Direction,
+                        Duration,
+                        IsConnected,
+                        Timestamp,
+                        TermReason,
+                        TermSipReason,
+                        Useragent = "BcsPhone",
+                        RemoteParty = RemoteParty(Uri = RemoteUri, DisplayName = RemoteDisplayName)
+                    )
+
+                    val addedItem = bcsWsHandler?.addCallReportEntry(newCall)
+                    Log.i("CallReport", "Added new call with ID: ${addedItem?.Id}")
+                } catch (e: Exception) {
+                    android.util.Log.e("Error", "Error adding call report item: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("CallReport", "Error adding call report item: ${e.message}")
+        }
+    }
+    public suspend fun fetchCallLog(): Array<CallLog> {
+        var CallLogs = emptyArray<CallLog>()
+        try {
+            val CallReportResponse = bcsWsHandler?.fetchCallReport(500, 0)
+
+            if (CallReportResponse != null) {
+                for (idx in CallReportResponse.Items.size - 1 downTo 0) {
+                    val item = CallReportResponse.Items[idx]
+                    // CallReportResponse.Items.reversed().forEach { item ->
+                    Log.i("CallReport", "Call: ${item.Direction} - ${item.RemoteParty.DisplayName} at ${item.Timestamp}")
+
+                    val Direction: Call.Dir
+                    val from: Address?
+                    val to: Address?
+                    var CallStatus: Call.Status = Call.Status.Success
+                    if (item.Direction == "incoming") {
+                        Direction = Call.Dir.Incoming
+                        from = LinphoneApplication.coreContext.core.createAddress(item.RemoteParty.Uri)
+                        to = core.defaultAccount!!.params.identityAddress
+                        if (!item.IsConnected) CallStatus = Call.Status.Missed
+                    } else {
+                        Direction = Call.Dir.Outgoing
+                        from = core.defaultAccount!!.params.identityAddress
+                        to = LinphoneApplication.coreContext.core.createAddress(item.RemoteParty.Uri)
+                    }
+                    val instant = Instant.parse(item.Timestamp)
+                    val timestampSeconds = instant.epochSecond
+                    if (CallStatus == Call.Status.Success)
+                        when (item.TermReason) {
+                            "normal" -> CallStatus = Call.Status.Success
+                            "sip-reason", "local-reject", "remote-reject" ->
+                                when (item.TermSipReason) {
+                                    302 -> CallStatus = Call.Status.EarlyAborted
+                                    404 -> CallStatus = Call.Status.Aborted
+                                    401, 403, 407 -> CallStatus = Call.Status.EarlyAborted // forbidden
+                                    408, 480, 4887 -> Call.Status.Aborted // no answer
+                                    484 -> CallStatus = Call.Status.EarlyAborted // address incomplete
+                                    486, 600 -> CallStatus = Call.Status.EarlyAborted // busy
+                                    488 -> CallStatus = Call.Status.EarlyAborted // not accetable
+                                    503 -> CallStatus = Call.Status.EarlyAborted // server unavailable
+                                    603 -> CallStatus = Call.Status.Declined // call rejected
+                                    else -> CallStatus = Call.Status.EarlyAborted // other
+                                }
+                            "sip-remote-cancelled", "sip-proxy-cancelled" -> Call.Status.Aborted // no answer
+                            "sip-local-cancelled" -> Call.Status.Aborted // cancelled
+                            "remote-bye-without-ack" ->
+                                when (item.TermSipReason) {
+                                    0 -> CallStatus = Call.Status.Success
+                                    else -> CallStatus = Call.Status.EarlyAborted // other
+                                }
+                            "remote-disconnected" -> CallStatus = Call.Status.Success
+                            "cancelled-by-forking" -> CallStatus = Call.Status.AcceptedElsewhere
+                            // internal-error, network-error, bad-address
+                            // generic-fail,audio-ice-create-failed, audio-ice-checks-failed,
+                            // dialog-interrupted,local-bye-without-ack,local-timeout,
+                            else -> CallStatus = Call.Status.EarlyAborted
+                        }
+
+                    val newLog = LinphoneApplication.coreContext.core.createCallLog(from!!, to!!, Direction, item.Duration, timestampSeconds, 0, CallStatus, false, 1.0F)
+
+                    CallLogs = CallLogs.plus(newLog)
+                }
+            }
+        } catch (e: HttpException) {
+            // Gestione degli errori HTTP
+            val code = e.code() // Codice di stato HTTP
+            val errorMessage = e.message() // Messaggio di errore HTTP
+            Log.e("HTTP Error: $code - $errorMessage")
+        } catch (e: IOException) {
+            // Gestione degli errori di rete o I/O
+            Log.e("IO Error: ${e.message}")
+        } catch (e: Exception) {
+            // Gestione di altri tipi di eccezioni non previsti
+            Log.e("Error: ${e.message}")
+        }
+        return CallLogs
+    }
+
 // dms end ************
 
     companion object {

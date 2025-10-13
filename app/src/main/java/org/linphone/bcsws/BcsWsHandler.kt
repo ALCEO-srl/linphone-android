@@ -12,6 +12,8 @@ import okhttp3.OkHttpClient
 import org.linphone.core.tools.Log
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -49,6 +51,51 @@ interface BcsWsService {
         @Query("limit") limit: String,
         @Query("filter") filter: String
     ): DirectoryResponse
+
+    @GET("{clientid}/bcsws/v1/domains/{domain}/users/{user}/callreport")
+    suspend fun getCallReport(
+        @Header("Authorization") bearerToken: String,
+        @Path("clientid") cliendid: String,
+        @Path("domain") domain: String,
+        @Path("user") user: String,
+        @Query("limit") limit: Int? = null,
+        @Query("offset") offset: Int? = null
+    ): CallReportResponse
+
+    @DELETE("{clientid}/bcsws/v1/domains/{domain}/users/{user}/callreport")
+    suspend fun clearCallReport(
+        @Header("Authorization") bearerToken: String,
+        @Path("clientid") cliendid: String,
+        @Path("domain") domain: String,
+        @Path("user") user: String
+    ): retrofit2.Response<Unit> // Usiamo Response<Unit> per una risposta senza body
+
+    @POST("{clientid}/bcsws/v1/domains/{domain}/users/{user}/callreport")
+    suspend fun addCallReportItem(
+        @Header("Authorization") bearerToken: String,
+        @Path("clientid") cliendid: String,
+        @Path("domain") domain: String,
+        @Path("user") user: String,
+        @Body item: CallReportItem
+    ): CallReportItem // Restituisce l'elemento con l'ID valorizzato
+
+    @GET("{clientid}/bcsws/v1/domains/{domain}/users/{user}/callreport/{itemid}")
+    suspend fun getCallReportItem(
+        @Header("Authorization") bearerToken: String,
+        @Path("clientid") cliendid: String,
+        @Path("domain") domain: String,
+        @Path("user") user: String,
+        @Path("itemid") itemId: String
+    ): CallReportItem
+
+    @DELETE("{clientid}/bcsws/v1/domains/{domain}/users/{user}/callreport/{itemid}")
+    suspend fun deleteCallReportItem(
+        @Header("Authorization") bearerToken: String,
+        @Path("clientid") cliendid: String,
+        @Path("domain") domain: String,
+        @Path("user") user: String,
+        @Path("itemid") itemId: String
+    ): retrofit2.Response<Unit>
 }
 
 class BcsWsHandler(server: String, port: String) {
@@ -142,6 +189,49 @@ class BcsWsHandler(server: String, port: String) {
                 Log.i("requestAuthToken(): Request failed")
                 // Gestione del caso in cui l'authResponse è nullo
                 throw IllegalStateException("Authentication failed: authResponse is null")
+            }
+        }
+    }
+
+    suspend fun fetchCallReport(limit: Int? = null, offset: Int? = null): CallReportResponse {
+        return withContext(Dispatchers.IO) {
+            requestAuthToken()
+            bcsWsService.getCallReport("Bearer $bearerToken", domain, domain, user, limit, offset)
+        }
+    }
+
+    suspend fun clearAllCallReportItems() {
+        return withContext(Dispatchers.IO) {
+            requestAuthToken()
+            val response = bcsWsService.clearCallReport("Bearer $bearerToken", domain, domain, user)
+            if (!response.isSuccessful) {
+                Log.e("BcsWsHandler", "Failed to clear call report: ${response.code()} - ${response.errorBody()?.string()}")
+                throw IllegalStateException("Failed to clear call report")
+            }
+        }
+    }
+
+    suspend fun addCallReportEntry(item: CallReportItem): CallReportItem {
+        return withContext(Dispatchers.IO) {
+            requestAuthToken()
+            bcsWsService.addCallReportItem("Bearer $bearerToken", domain, domain, user, item)
+        }
+    }
+
+    suspend fun fetchCallReportItem(itemId: String): CallReportItem {
+        return withContext(Dispatchers.IO) {
+            requestAuthToken()
+            bcsWsService.getCallReportItem("Bearer $bearerToken", domain, domain, user, itemId)
+        }
+    }
+
+    suspend fun deleteCallReportEntry(itemId: String) {
+        return withContext(Dispatchers.IO) {
+            requestAuthToken()
+            val response = bcsWsService.deleteCallReportItem("Bearer $bearerToken", domain, domain, user, itemId)
+            if (!response.isSuccessful) {
+                Log.e("BcsWsHandler", "Failed to delete call report item: ${response.code()} - ${response.errorBody()?.string()}")
+                throw IllegalStateException("Failed to delete call report item")
             }
         }
     }
