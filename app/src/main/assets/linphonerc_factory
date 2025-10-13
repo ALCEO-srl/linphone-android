@@ -67,7 +67,7 @@ port=443
 [assistant]
 xmlrpc_url=https://subscribe.linphone.org:444/wizard.php
 
-[account_creator]c
+[account_creator]
 backend=0
 
 [lime]
