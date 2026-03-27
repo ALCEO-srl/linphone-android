@@ -44,6 +44,7 @@ import org.linphone.core.Content
 import org.linphone.mediastream.Version
 import org.linphone.notifications.Notifiable
 import org.linphone.notifications.NotificationsManager
+import org.linphone.core.tools.Log
 import org.linphone.telecom.NativeCallWrapper
 
 @Suppress("DEPRECATION")
@@ -109,6 +110,34 @@ class Compatibility {
             return if (Version.sdkAboveOrEqual(Version.API33_ANDROID_13_TIRAMISU)) {
                 Api33Compatibility.hasPostNotificationsPermission(context)
             } else true
+        }
+
+        fun isIgnoringBatteryOptimizations(context: Context): Boolean {
+            val powerManager = context.getSystemService(android.os.PowerManager::class.java)
+            return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+        }
+
+        fun requestIgnoreBatteryOptimizations(context: Context) {
+            try {
+                val intent = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                    .setData(Uri.parse("package:${context.packageName}"))
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("[Compatibility] Can't request battery optimization exemption: $e")
+            }
+        }
+
+        fun canUseFullScreenIntent(context: Context): Boolean {
+            if (Build.VERSION.SDK_INT >= 34) {
+                return Api34Compatibility.canUseFullScreenIntent(context)
+            }
+            return true
+        }
+
+        fun requestFullScreenIntentPermission(context: Context) {
+            if (Build.VERSION.SDK_INT >= 34) {
+                Api34Compatibility.requestFullScreenIntentPermission(context)
+            }
         }
 
         fun requestReadExternalStorageAndCameraPermissions(fragment: Fragment, code: Int) {
@@ -256,9 +285,9 @@ class Compatibility {
             }
         }
 
-        fun startForegroundService(service: Service, notifId: Int, notif: Notification?) {
+        fun startForegroundService(service: Service, notifId: Int, notif: Notification?, keepAlive: Boolean = false) {
             if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
-                Api31Compatibility.startForegroundService(service, notifId, notif)
+                Api31Compatibility.startForegroundService(service, notifId, notif, keepAlive)
             } else {
                 Api23Compatibility.startForegroundService(service, notifId, notif)
             }

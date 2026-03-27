@@ -5,7 +5,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
+import org.linphone.R
 import org.linphone.bcsws.DirectoryItem
+import org.linphone.core.tools.Log
 
 class DirectoryViewModel : ViewModel() {
 

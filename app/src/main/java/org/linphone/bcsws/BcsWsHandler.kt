@@ -153,8 +153,8 @@ class BcsWsHandler(server: String, port: String) {
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://$server:$port/")
         .addConverterFactory(GsonConverterFactory.create())
-        // .client(getUnsafeOkHttpClient().build())
-        .client(OkHttpClient.Builder().build())
+        .client(getUnsafeOkHttpClient().build())
+        //.client(OkHttpClient.Builder().build())
         .build()
 
     private val bcsWsService = retrofit.create(BcsWsService::class.java)

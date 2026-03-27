@@ -26,6 +26,8 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
@@ -63,6 +65,12 @@ class CallActivity : ProximitySensorActivity() {
 
         binding = DataBindingUtil.setContentView(this, R.layout.voip_activity)
         binding.lifecycleOwner = this
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -233,6 +241,8 @@ class CallActivity : ProximitySensorActivity() {
     override fun onPause() {
         val core = coreContext.core
         if (core.callsNb > 0) {
+            val call = core.currentCall
+            Log.w("#\$#\$#\$#\$ [CALL ACTIVITY] onPause - APP VA IN BACKGROUND con ${core.callsNb} chiamate. mic muted=${call?.microphoneMuted} state=${call?.state}")
             coreContext.createCallOverlay()
         }
 

@@ -82,15 +82,14 @@ class CoreContext(
     useAutoStartDescription: Boolean = false
 ) :
     LifecycleOwner, ViewModelStoreOwner {
+
     private val _lifecycleRegistry = LifecycleRegistry(this)
-    override fun getLifecycle(): Lifecycle {
-        return _lifecycleRegistry
-    }
+    override val lifecycle: Lifecycle
+        get() = _lifecycleRegistry
 
     private val _viewModelStore = ViewModelStore()
-    override fun getViewModelStore(): ViewModelStore {
-        return _viewModelStore
-    }
+    override val viewModelStore: ViewModelStore
+        get() = _viewModelStore
 
     var bcsWsHandler: BcsWsHandler? = null
 
@@ -115,8 +114,8 @@ class CoreContext(
     }
 
     val sdkVersion: String by lazy {
-        val sdkVersion = context.getString(R.string.linphone_sdk_version)
-        val sdkBranch = context.getString(R.string.linphone_sdk_branch)
+        val sdkVersion = context.getString(org.linphone.core.R.string.linphone_sdk_version)
+        val sdkBranch = context.getString(org.linphone.core.R.string.linphone_sdk_branch)
         val sdkBuildType = org.linphone.core.BuildConfig.BUILD_TYPE
         "$sdkVersion ($sdkBranch, $sdkBuildType)"
     }
@@ -310,8 +309,10 @@ class CoreContext(
                     AudioRouteUtils.routeAudioToBluetooth(call)
                 }
             } else if (state == Call.State.Connected) {
+                Log.w("#\$#\$#\$#\$ [CORE] CHIAMATA CONNESSA - mic muted=${call.microphoneMuted} audioRoute=${call.currentParams.audioDirection}")
                 onCallStarted()
             } else if (state == Call.State.StreamsRunning) {
+                Log.w("#\$#\$#\$#\$ [CORE] STREAMS RUNNING - mic muted=${call.microphoneMuted} audioDir=${call.currentParams.audioDirection} isInBackground=${core.isInBackground}")
                 if (previousCallState == Call.State.Connected) {
                     // Do not automatically route audio to bluetooth after first call
                     if (core.callsNb == 1) {
@@ -436,7 +437,7 @@ class CoreContext(
         }
 
         core = Factory.instance().createCoreWithConfig(coreConfig, context)
-
+// dms
         val bcswsHost = core.config.getString("bcsws", "host", "") ?: ""
         val bcswsPort = core.config.getString("bcsws", "port", "") ?: ""
 
@@ -607,9 +608,9 @@ class CoreContext(
         val deviceName: String = corePreferences.deviceName
         val appName: String = context.resources.getString(R.string.user_agent_app_name)
         val androidVersion = BuildConfig.VERSION_NAME
-        val userAgent = "$appName/$androidVersion ($deviceName) LinphoneSDK"
-        val sdkVersion = context.getString(R.string.linphone_sdk_version)
-        val sdkBranch = context.getString(R.string.linphone_sdk_branch)
+        val userAgent = "$appName/$androidVersion ($deviceName)"  // dms
+        val sdkVersion = context.getString(org.linphone.core.R.string.linphone_sdk_version)
+        val sdkBranch = context.getString(org.linphone.core.R.string.linphone_sdk_branch)
         val sdkUserAgent = "$sdkVersion ($sdkBranch)"
         core.setUserAgent(userAgent, sdkUserAgent)
     }
@@ -652,7 +653,7 @@ class CoreContext(
             }
         } else {
             Log.i("[Context] Background mode with foreground service automatically enabled")
-            corePreferences.keepServiceAlive = true
+            corePreferences.keepServiceAlive = false //dms
             notificationsManager.startForeground()
         }
 

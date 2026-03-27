@@ -882,4 +882,25 @@
     <string name="content_description_toggle_conference_info_details">Modifica la visibilità dei dettagli delle informazioni sulla riunione</string>
     <string name="content_description_conference_participants">Partecipanti alla chiamata di gruppo</string>
     <string name="content_description_recording_export">Esportazione registrazione</string>
+
+    <!-- POST_NOTIFICATIONS denied feedback -->
+    <string name="perm_post_notifications_denied_title">Notifiche disabilitate</string>
+    <string name="perm_post_notifications_denied_message">Senza il permesso per le notifiche non riceverai avvisi di chiamate in arrivo o messaggi.\n\nPuoi abilitarlo in qualsiasi momento dalle impostazioni dell\'app.</string>
+    <string name="perm_post_notifications_open_settings">Apri impostazioni</string>
+
+    <!-- Battery optimization exemption -->
+    <string name="perm_battery_optimization_title">Ottimizzazione batteria</string>
+    <string name="perm_battery_optimization_message">Per ricevere chiamate in arrivo con l\'app in background, disabilita l\'ottimizzazione batteria per questa app.\n\nSenza questa impostazione il sistema potrebbe ritardare o bloccare le notifiche push.</string>
+    <string name="perm_battery_optimization_open_settings">Disabilita ottimizzazione</string>
+
+    <!-- USE_FULL_SCREEN_INTENT permission (Android 14+) -->
+    <string name="perm_full_screen_intent_title">Permesso visualizzazione chiamate in arrivo</string>
+    <string name="perm_full_screen_intent_message">Per mostrare la schermata di chiamata in arrivo sulla lockscreen, l\'app ha bisogno del permesso \"Mostra notifiche a schermo intero\".\n\nSenza questo permesso potresti perdere le chiamate con lo schermo spento.\n\nAbilita il permesso nella schermata successiva.</string>
+    <string name="perm_full_screen_intent_open_settings">Apri impostazioni</string>
+
+    <!-- Auto-start permission (Honor/Huawei/Xiaomi/OPPO/Vivo/OnePlus) -->
+    <string name="perm_auto_start_title">Abilita avvio automatico</string>
+    <string name="perm_auto_start_message">Su questo dispositivo, chiudere l\'app dal gestore applicazioni recenti può bloccare le notifiche di chiamata in arrivo.\n\nAbilita l\'avvio automatico per questa app in modo che possa essere svegliata dalle notifiche push anche quando è chiusa.</string>
+    <string name="perm_auto_start_open_settings">Apri impostazioni</string>
+    <string name="perm_auto_start_not_found">Abilita manualmente l\'avvio automatico per questa app nelle impostazioni di sicurezza o batteria del dispositivo.</string>
 </resources>

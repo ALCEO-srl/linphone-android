@@ -349,7 +349,11 @@ class Api26Compatibility {
         }
 
         fun startForegroundService(context: Context, intent: Intent) {
-            context.startForegroundService(intent)
+            try {
+                context.startForegroundService(intent)
+            } catch (se: SecurityException) {
+                Log.e("[Api26 Compatibility] Can't start foreground service! $se")
+            }
         }
 
         fun hasTelecomManagerFeature(context: Context): Boolean {

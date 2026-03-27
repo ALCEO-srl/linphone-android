@@ -22,6 +22,8 @@ package org.linphone.activities.assistant
 import android.os.Bundle
 import androidx.annotation.StringRes
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.Snackbar
 import org.linphone.LinphoneApplication.Companion.corePreferences
@@ -42,6 +44,13 @@ class AssistantActivity : GenericActivity(), SnackBarActivity {
         sharedViewModel = ViewModelProvider(this)[SharedAssistantViewModel::class.java]
 
         coordinator = findViewById(R.id.coordinator)
+
+        ViewCompat.setOnApplyWindowInsetsListener(coordinator) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            view.setPadding(systemBars.left, systemBars.top, systemBars.right, maxOf(systemBars.bottom, ime.bottom))
+            insets
+        }
 
         corePreferences.firstStart = false
     }

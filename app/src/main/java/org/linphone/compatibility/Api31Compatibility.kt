@@ -25,6 +25,8 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
+import android.os.Build
 import androidx.core.content.ContextCompat
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.LinphoneApplication.Companion.corePreferences
@@ -209,11 +211,26 @@ class Api31Compatibility {
             }
         }
 
-        fun startForegroundService(service: Service, notifId: Int, notif: Notification?) {
+        fun startForegroundService(service: Service, notifId: Int, notif: Notification?, keepAlive: Boolean = false) {
             try {
-                service.startForeground(notifId, notif)
+                // For keep-alive mode (no push, permanent background service) use specialUse
+                // on Android 14+ — phoneCall type is not appropriate for a non-active-call service,
+                // and dataSync is limited to 6h/day on Android 15+.
+                // For all other cases (incoming call from push) use phoneCall, which is exempt
+                // from the background "eligible state" restriction for RECORD_AUDIO.
+                val serviceType = if (keepAlive && Build.VERSION.SDK_INT >= 34) {
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                } else {
+                    // Include MICROPHONE alongside PHONE_CALL so Android 15+ doesn't suspend
+                    // audio capture when the screen turns off or the app goes to background.
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+
+                }
+                service.startForeground(notifId, notif!!, serviceType)
             } catch (fssnae: ForegroundServiceStartNotAllowedException) {
                 Log.e("[Api31 Compatibility] Can't start service as foreground! $fssnae")
+            } catch (se: SecurityException) {
+                Log.e("[Api31 Compatibility] Security exception starting foreground service! $se")
             }
         }
 

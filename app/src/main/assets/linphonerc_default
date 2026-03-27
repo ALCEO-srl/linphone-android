@@ -24,7 +24,8 @@ size=vga
 
 [app]
 tunnel=disabled
-auto_start=1
+auto_start=0
+keep_service_alive=0
 record_aware=1
 
 [tunnel]

@@ -1,10 +1,3 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
-
 # If your project uses WebView with JS, uncomment the following
 # and specify the fully qualified class name to the JavaScript interface
 # class:
@@ -27,10 +20,26 @@
 
 # Retrofit
 -keep class retrofit2.** { *; }
+-keep interface retrofit2.** { *; }
+-keepattributes Exceptions, Signature, InnerClasses
 -keep class okhttp3.** { *; }
+-keep class okhttp3.internal.publicsuffix.PublicSuffixDatabase
+
+-dontwarn org.bouncycastle.**
+-dontwarn org.conscrypt.**
+-dontwarn org.openjsse.**
+-keep class org.conscrypt.** { *; }
 
 # Gson
 -keep class com.google.gson.** { *; }
+-keep class com.google.gson.stream.** { *; }
+-keep class com.google.gson.reflect.TypeToken
+
+-keepattributes Signature, InnerClasses, EnclosingMethod, RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
+-keepattributes *Annotation*
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
 
 -keep class  org.linphone.bcsws.UserConf { *; }
 -keep class  org.linphone.bcsws.Member { *; }
@@ -39,4 +48,7 @@
 -keep class  org.linphone.bcsws.AuthResponse { *; }
 -keep class  org.linphone.bcsws.DirectoryResponse { *; }
 -keep class  org.linphone.bcsws.DirectoryItem { *; }
+-keep class org.linphone.bcsws.CallReportItem { *; }
+-keep class org.linphone.bcsws.CallReportResponse { *; }
+-keep class org.linphone.bcsws.RemoteParty { *; }
 -keep class  org.linphone.bcsws.** { *; }

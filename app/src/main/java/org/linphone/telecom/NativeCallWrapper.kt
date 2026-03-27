@@ -50,8 +50,14 @@ class NativeCallWrapper(var callId: String) : Connection() {
     }
 
     override fun onStateChanged(state: Int) {
-        Log.i("[Connection] Telecom state changed [${intStateToString(state)}] for call with id: $callId")
+        Log.i("#\$#\$#\$#\$ [Connection] STATO TELECOM -> [${intStateToString(state)}] callId=[$callId]")
         super.onStateChanged(state)
+        if (state == Connection.STATE_DISCONNECTED) {
+            Log.w("#\$#\$#\$#\$ [Connection] DISCONNESSO! Se non hai riagganciato tu, è il sistema Telecom che ha terminato la chiamata. callId=[$callId]")
+        }
+        if (state == Connection.STATE_ACTIVE) {
+            Log.i("#\$#\$#\$#\$ [Connection] ATTIVA in background? chiamata connessa e attiva. callId=[$callId]")
+        }
     }
 
     override fun onAnswer(videoState: Int) {
@@ -73,6 +79,7 @@ class NativeCallWrapper(var callId: String) : Connection() {
 
     override fun onCallAudioStateChanged(state: CallAudioState) {
         Log.i("[Connection] Audio state changed: $state")
+        Log.w("#\$#\$#\$#\$ [AUDIO STATE] muted=${state.isMuted} route=${state.route} callId=[$callId]")
 
         val call = getCall()
         if (call != null) {

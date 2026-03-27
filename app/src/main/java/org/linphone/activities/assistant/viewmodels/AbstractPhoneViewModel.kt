@@ -22,7 +22,7 @@ package org.linphone.activities.assistant.viewmodels
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
+//import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import org.linphone.activities.assistant.fragments.CountryPickerFragment
 import org.linphone.core.AccountCreator
@@ -39,12 +39,11 @@ abstract class AbstractPhoneViewModel(val accountCreator: AccountCreator) :
     val phoneNumber = MutableLiveData<String>()
     val phoneNumberError = MutableLiveData<String>()
 
-    val countryName: LiveData<String> = Transformations.switchMap(prefix) {
-        getCountryNameFromPrefix(it)
-    }
+    val countryName = MutableLiveData<String>()
 
     init {
         prefix.value = "+"
+        countryName.value = "it"
     }
 
     override fun onCountryClicked(dialPlan: DialPlan) {

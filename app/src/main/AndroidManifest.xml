@@ -1,10 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+
     <!-- To be able to display contacts list & match calling/called numbers -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <!-- For in-app contact edition -->
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+    <!-- Starting Android 13 we need to ask notification permission -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Needed for full screen intent in incoming call notifications -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- To vibrate when pressing DTMF keys on numpad & incoming calls -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- Helps filling phone number and country code in assistant -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -12,17 +27,10 @@
     <!-- Needed for auto start at boot and to ensure the service won't be killed by OS while in call -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- Starting Android 13 we need to ask notification permission -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
-    <!-- Needed for full screen intent in incoming call notifications -->
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <!-- To vibrate when pressing DTMF keys on numpad & incoming calls -->
-    <uses-permission android:name="android.permission.VIBRATE" />
-
     <!-- Needed to attach file(s) in chat room fragment -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
+
     <!-- Starting Android 13 you need those 3 permissions instead (https://developer.android.com/about/versions/13/behavior-changes-13) -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
@@ -51,9 +59,27 @@
     (https://developer.android.com/guide/topics/connectivity/bluetooth/permissions) -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
+    <!-- Needed to request battery optimization exemption for VoIP (push notifications wake-up) -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!-- Needed for foreground service
     (https://developer.android.com/guide/components/foreground-services) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
+    <!-- Needed for Android 14
+    https://developer.android.com/about/versions/14/behavior-changes-14#fgs-types -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+
+    <!-- Needed to keep a permanent foreground service and keep app alive to be able to receive
+    messages & calls for third party accounts for which push notifications aren't available,
+    and starting Android 15 dataSync is limited to 6 hours per day
+    and can't be used with RECEIVE_BOOT_COMPLETED intent either -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+    <!-- Needed for auto start at boot if keep alive service is enabled -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".LinphoneApplication"
@@ -158,9 +184,15 @@
         <service
             android:name=".core.CoreService"
             android:exported="false"
-            android:foregroundServiceType="phoneCall|camera|microphone"
+            android:foregroundServiceType="phoneCall|microphone|camera|specialUse"
             android:stopWithTask="false"
-            android:label="@string/app_name" />
+            android:label="@string/app_name">
+            <!-- Required when using foregroundServiceType="specialUse" (Android 14+).
+                 Used to keep the app alive in background for accounts without push notifications. -->
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keep app alive to receive VoIP calls and messages for accounts without push notification support" />
+        </service>
 
         <service android:name="org.linphone.core.tools.firebase.FirebaseMessaging"
             android:enabled="${firebaseServiceEnabled}"

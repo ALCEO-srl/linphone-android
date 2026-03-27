@@ -905,4 +905,25 @@
     <string name="content_description_toggle_conference_info_details">Toggle meeting information details visibility</string>
     <string name="content_description_conference_participants">Group call participants</string>
     <string name="content_description_recording_export">Export recording</string>
+
+    <!-- POST_NOTIFICATIONS denied feedback -->
+    <string name="perm_post_notifications_denied_title">Notifications disabled</string>
+    <string name="perm_post_notifications_denied_message">Without notification permission you will not receive incoming call or message alerts.\n\nYou can enable it at any time from the app settings.</string>
+    <string name="perm_post_notifications_open_settings">Open settings</string>
+
+    <!-- Battery optimization exemption -->
+    <string name="perm_battery_optimization_title">Battery optimization</string>
+    <string name="perm_battery_optimization_message">To receive incoming calls when the app is in the background, please disable battery optimization for this app.\n\nWithout this, the system may delay or block push notifications.</string>
+    <string name="perm_battery_optimization_open_settings">Disable optimization</string>
+
+    <!-- USE_FULL_SCREEN_INTENT permission (Android 14+) -->
+    <string name="perm_full_screen_intent_title">Incoming call display permission</string>
+    <string name="perm_full_screen_intent_message">To show the incoming call screen on the lock screen, this app needs the \"Display over other apps\" notification permission.\n\nWithout it, you may miss calls when the screen is off.\n\nPlease enable it in the next screen.</string>
+    <string name="perm_full_screen_intent_open_settings">Open settings</string>
+
+    <!-- Auto-start permission (Honor/Huawei/Xiaomi/OPPO/Vivo/OnePlus) -->
+    <string name="perm_auto_start_title">Enable auto-start</string>
+    <string name="perm_auto_start_message">On this device, closing the app from the recent apps screen may block incoming call notifications.\n\nPlease enable auto-start for this app so it can be woken up by push notifications even when closed.</string>
+    <string name="perm_auto_start_open_settings">Open settings</string>
+    <string name="perm_auto_start_not_found">Please enable auto-start for this app manually in your device\'s security or battery settings.</string>
 </resources>

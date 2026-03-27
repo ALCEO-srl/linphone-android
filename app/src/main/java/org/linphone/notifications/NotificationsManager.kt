@@ -99,6 +99,7 @@ class NotificationsManager(private val context: Context) {
 
     private var currentForegroundServiceNotificationId: Int = 0
     private var serviceNotification: Notification? = null
+    private var currentCallNotification: Notification? = null
 
     private var service: CoreService? = null
 
@@ -326,15 +327,38 @@ class NotificationsManager(private val context: Context) {
 
     fun startCallForeground(coreService: CoreService) {
         service = coreService
+        Log.w("#\$#\$#\$#\$ [startCallForeground] currentFgNotifId=$currentForegroundServiceNotificationId callsNb=${coreContext.core.callsNb} keepAlive=${corePreferences.keepServiceAlive}")
         when {
             currentForegroundServiceNotificationId != 0 -> {
                 if (currentForegroundServiceNotificationId != SERVICE_NOTIF_ID) {
-                    Log.e("[Notifications Manager] There is already a foreground service notification [$currentForegroundServiceNotificationId]")
+                    // This is a call notification ID. The service instance may have changed
+                    // (new instance started while call was active). Re-promote with cached notif.
+                    val cachedNotif = currentCallNotification
+                    if (cachedNotif != null) {
+                        Log.w("#\$#\$#\$#\$ [startCallForeground] BRANCH: re-promuovo nuovo service con notifica chiamata cachedNotifId=$currentForegroundServiceNotificationId")
+                        Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, cachedNotif, keepAlive = false)
+                    } else {
+                        Log.e("[Notifications Manager] There is already a foreground service notification [$currentForegroundServiceNotificationId] but no cached call notification")
+                        Log.w("#\$#\$#\$#\$ [startCallForeground] BRANCH: notifId diverso da SERVICE_NOTIF_ID ma no cached notif")
+                    }
+                } else if (corePreferences.keepServiceAlive && coreContext.core.callsNb > 0 && serviceNotification != null) {
+                    Log.i("[Notifications Manager] keepAlive FGS already running — upgrading to phoneCall type for active call")
+                    Log.w("#\$#\$#\$#\$ [startCallForeground] BRANCH: upgrade keepAlive -> PHONE_CALL")
+                    Compatibility.startForegroundService(coreService, SERVICE_NOTIF_ID, serviceNotification, keepAlive = false)
                 } else {
-                    Log.i("[Notifications Manager] There is already a foreground service notification, no need to use the call notification to keep Service alive")
+                    // The notification ID is already tracked, but the service instance may have
+                    // changed (new instance started by startForegroundService). Re-promote the
+                    // new instance to foreground with the same notification so Android 15+
+                    // keeps granting microphone access in background.
+                    Log.w("#\$#\$#\$#\$ [startCallForeground] BRANCH: già FGS - re-promuovo su istanza corrente con notifId=$currentForegroundServiceNotificationId")
+                    val notif = serviceNotification
+                    if (notif != null) {
+                        Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, notif, keepAlive = false)
+                    }
                 }
             }
             coreContext.core.callsNb > 0 -> {
+                Log.w("#\$#\$#\$#\$ [startCallForeground] BRANCH: nessun FGS attivo, creo notifica chiamata")
                 // When this method will be called, we won't have any notification yet
                 val call = coreContext.core.currentCall ?: coreContext.core.calls[0]
                 when (call.state) {
@@ -351,7 +375,7 @@ class NotificationsManager(private val context: Context) {
         }
     }
 
-    fun startForeground(coreService: CoreService, useAutoStartDescription: Boolean = true) {
+    fun startForeground(coreService: CoreService, useAutoStartDescription: Boolean = true, keepAlive: Boolean = false) {
         service = coreService
 
         if (serviceNotification == null) {
@@ -363,8 +387,8 @@ class NotificationsManager(private val context: Context) {
         }
 
         currentForegroundServiceNotificationId = SERVICE_NOTIF_ID
-        Log.i("[Notifications Manager] Starting service as foreground [$currentForegroundServiceNotificationId]")
-        Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, serviceNotification)
+        Log.i("[Notifications Manager] Starting service as foreground [$currentForegroundServiceNotificationId] (keepAlive=$keepAlive)")
+        Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, serviceNotification, keepAlive)
     }
 
     private fun startForeground(notificationId: Int, callNotification: Notification) {
@@ -372,6 +396,7 @@ class NotificationsManager(private val context: Context) {
             Log.i("[Notifications Manager] Starting service as foreground using call notification [$notificationId]")
             try {
                 currentForegroundServiceNotificationId = notificationId
+                currentCallNotification = callNotification
 
                 val coreService = service
                 if (coreService != null) {
@@ -404,7 +429,9 @@ class NotificationsManager(private val context: Context) {
     }
 
     fun stopForegroundNotificationIfPossible() {
+        Log.w("#\$#\$#\$#\$ [stopFgIfPossible] currentFgNotifId=$currentForegroundServiceNotificationId keepAlive=${corePreferences.keepServiceAlive} service=${service != null} calls=${coreContext.core.callsNb}")
         if (service != null && currentForegroundServiceNotificationId == SERVICE_NOTIF_ID && !corePreferences.keepServiceAlive) {
+            Log.w("#\$#\$#\$#\$ [stopFgIfPossible] RIMUOVO il FGS SERVICE_NOTIF_ID!")
             Log.i("[Notifications Manager] Stopping auto-started service notification [$currentForegroundServiceNotificationId]")
             stopForegroundNotification()
         }
@@ -414,6 +441,10 @@ class NotificationsManager(private val context: Context) {
         if (service != null && currentForegroundServiceNotificationId != SERVICE_NOTIF_ID) {
             Log.i("[Notifications Manager] Stopping call notification [$currentForegroundServiceNotificationId] used as foreground service")
             stopForegroundNotification()
+        } else if (service != null && currentForegroundServiceNotificationId == SERVICE_NOTIF_ID && corePreferences.keepServiceAlive && serviceNotification != null) {
+            // Call ended while keepAlive FGS was running as PHONE_CALL type — restore SPECIAL_USE.
+            Log.i("[Notifications Manager] Call ended, restoring keepAlive foreground service to specialUse type")
+            Compatibility.startForegroundService(service!!, SERVICE_NOTIF_ID, serviceNotification, keepAlive = true)
         }
     }
 
@@ -613,6 +644,13 @@ class NotificationsManager(private val context: Context) {
         val notification = Compatibility.createCallNotification(context, call, notifiable, pendingIntent, channelToUse, this)
         Log.i("[Notifications Manager] Notifying call notification [${notifiable.notificationId}]")
         notify(notifiable.notificationId, notification)
+
+        // Keep cached notification up-to-date so re-promotion of new service instances
+        // (e.g. after startForegroundService() during an active call) uses the latest content
+        // rather than the stale incoming-call notification.
+        if (currentForegroundServiceNotificationId == notifiable.notificationId) {
+            currentCallNotification = notification
+        }
 
         if (useAsForeground || (service != null && currentForegroundServiceNotificationId == 0)) {
             Log.i("[Notifications Manager] Notifying call notification for foreground service [${notifiable.notificationId}]")

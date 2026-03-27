@@ -23,11 +23,21 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import org.linphone.LinphoneApplication.Companion.ensureCoreExists
+import org.linphone.compatibility.Compatibility
 import org.linphone.core.tools.Log
 
 class CorePushReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        ensureCoreExists(context.applicationContext, true)
         Log.i("[Push Notification] Push notification has been received in broadcast receiver")
+        ensureCoreExists(context.applicationContext, true)
+
+        // Android 15+: start CoreService as foreground immediately within the push handling
+        // window. If we wait for the SIP INVITE to trigger showForegroundServiceNotification(),
+        // the window may have expired and startForeground(MICROPHONE) will throw a silent
+        // SecurityException, leaving the microphone suspended in background.
+        val serviceIntent = Intent(context, CoreService::class.java).apply {
+            putExtra("PushReceived", true)
+        }
+        Compatibility.startForegroundService(context, serviceIntent)
     }
 }

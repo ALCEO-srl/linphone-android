@@ -22,6 +22,7 @@ package org.linphone.telecom
 import android.annotation.TargetApi
 import android.content.ComponentName
 import android.content.Intent
+import android.media.AudioManager
 import android.net.Uri
 import android.telecom.*
 import org.linphone.LinphoneApplication
@@ -30,6 +31,7 @@ import org.linphone.LinphoneApplication.Companion.ensureCoreExists
 import org.linphone.core.Call
 import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
+import org.linphone.core.CoreService
 import org.linphone.core.tools.Log
 
 @TargetApi(29)
@@ -179,6 +181,7 @@ class TelecomConnectionService : ConnectionService() {
             if (call != null) {
                 val callState = call.state
                 Log.i("[Telecom Connection Service] Found incoming call from ID [$callId] with state [$callState]")
+
                 when (callState) {
                     Call.State.IncomingEarlyMedia, Call.State.IncomingReceived -> connection.setRinging()
                     Call.State.Paused, Call.State.PausedByRemote, Call.State.Pausing -> connection.setOnHold()
@@ -221,6 +224,7 @@ class TelecomConnectionService : ConnectionService() {
         Log.i("[Telecom Connection Service] Call [$callId] is in error, destroying connection currently in ${connection.stateAsString()}")
         connection.setDisconnected(DisconnectCause(DisconnectCause.ERROR))
         connection.destroy()
+        resetAudioMode()
     }
 
     private fun onCallEnded(call: Call) {
@@ -236,6 +240,7 @@ class TelecomConnectionService : ConnectionService() {
         Log.i("[Telecom Connection Service] Call [$callId] ended with reason: $reason, destroying connection currently in ${connection.stateAsString()}")
         connection.setDisconnected(DisconnectCause(DisconnectCause.LOCAL))
         connection.destroy()
+        resetAudioMode()
     }
 
     private fun onCallPaused(call: Call) {
@@ -259,5 +264,30 @@ class TelecomConnectionService : ConnectionService() {
 
         Log.i("[Telecom Connection Service] Setting connection as active, currently in ${connection.stateAsString()}")
         connection.setActive()
+
+        // Android 15+: must explicitly set MODE_IN_COMMUNICATION so the system
+        // grants microphone access to this app when it goes to background.
+        val audioManager = getSystemService(AudioManager::class.java)
+        if (audioManager.mode != AudioManager.MODE_IN_COMMUNICATION) {
+            Log.i("[Telecom Connection Service] Setting audio mode to MODE_IN_COMMUNICATION")
+            audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
+        }
+        Log.w("#\$#\$#\$#\$ [CALL CONNECTED] callId=[$callId] audioMode=${audioManager.mode} micMuted=${call.microphoneMuted}")
+
+        // Ensure the foreground service is alive to keep process priority during the call.
+        val serviceIntent = Intent(applicationContext, CoreService::class.java)
+        startForegroundService(serviceIntent)
+
+
+
+    }
+
+    private fun resetAudioMode() {
+        val audioManager = getSystemService(AudioManager::class.java)
+        Log.w("#\$#\$#\$#\$ [RESET AUDIO MODE] prima del reset: audioMode=${audioManager.mode}")
+        if (audioManager.mode == AudioManager.MODE_IN_COMMUNICATION) {
+            Log.i("[Telecom Connection Service] Resetting audio mode to MODE_NORMAL")
+            audioManager.mode = AudioManager.MODE_NORMAL
+        }
     }
 }

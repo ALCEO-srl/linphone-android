@@ -58,6 +58,7 @@
                     android:layout_height="@dimen/contact_avatar_big_size"
                     android:background="@drawable/generated_avatar_bg"
                     android:src="@drawable/voip_single_contact_avatar"
+                    app:tint="?attr/secondaryTextColor"
                     android:contentDescription="@null" />
 
                 <TextView

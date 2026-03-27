@@ -4,9 +4,11 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
+import org.linphone.LinphoneApplication.Companion.corePreferences
 import org.linphone.R
 import org.linphone.activities.main.viewmodels.SharedMainViewModel
 import org.linphone.bcsws.DirectoryItem
@@ -22,6 +24,7 @@ class DirectoryAdapter(
     class DirectoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val displayName: TextView = itemView.findViewById(R.id.directoryItemDisplayName)
         val organization: TextView = itemView.findViewById(R.id.directoryItemOrganization)
+        var avatar: ImageView = itemView.findViewById(R.id.avatar)
     }
 
     // Metodo per creare nuovi ViewHolder

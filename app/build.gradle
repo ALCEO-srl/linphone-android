@@ -2,11 +2,10 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
-    id 'org.jlleitschuh.gradle.ktlint'
 }
 
 def appVersionName = "5.2.0"
-def appVersionCode = 50000
+def appVersionCode = 50004
 
 static def getPackageName() {
     return "com.alceo.bcsphone"
@@ -81,14 +80,23 @@ project.tasks['preBuild'].dependsOn 'getGitVersion'
 project.tasks['preBuild'].dependsOn 'linphoneSdkSource'
 
 android {
-    compileSdkVersion 33
-    buildToolsVersion '33.0.0'
+    compileSdk 35
+
     defaultConfig {
         minSdkVersion 26
-        targetSdkVersion 33
+        targetSdk 35
         versionCode appVersionCode
         versionName "${project.version}"
         applicationId getPackageName()
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
     }
 
     applicationVariants.all { variant ->
@@ -131,7 +139,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 
@@ -144,7 +152,7 @@ android {
                 resValue "string", "gcm_defaultSenderId", "none"
             }
 
-            resValue "bool", "crashlytics_enabled", "false"
+           // resValue "bool", "crashlytics_enabled", "false"
         }
 
         releaseWithCrashlytics {
@@ -186,6 +194,7 @@ android {
 
     buildFeatures {
         dataBinding = true
+        buildConfig = true
     }
 
     namespace 'org.linphone'
@@ -197,6 +206,7 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.9.0'
     implementation 'androidx.core:core-splashscreen:1.0.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.1' // dms
     implementation 'androidx.media:media:1.6.0'
     implementation "androidx.security:security-crypto-ktx:1.1.0-alpha03"
     implementation "androidx.window:window:1.0.0"
@@ -237,7 +247,7 @@ dependencies {
     // https://github.com/Baseflow/PhotoView/blob/master/LICENSE Apache v2.0
     implementation 'com.github.chrisbanes:PhotoView:2.3.0'
 
-    implementation platform('com.google.firebase:firebase-bom:31.0.3')
+    implementation platform('com.google.firebase:firebase-bom:33.6.0')
     if (crashlyticsEnabled) {
         implementation 'com.google.firebase:firebase-crashlytics-ndk'
     } else {
@@ -266,12 +276,6 @@ task generateContactsXml(type: Copy) {
 }
 project.tasks['preBuild'].dependsOn 'generateContactsXml'
 
-ktlint {
-    android = true
-    ignoreFailures = true
-}
-
-project.tasks['preBuild'].dependsOn 'ktlintFormat'
 
 if (crashlyticsEnabled) {
     afterEvaluate {
@@ -282,3 +286,4 @@ if (crashlyticsEnabled) {
         packageReleaseWithCrashlytics.finalizedBy(uploadCrashlyticsSymbolFileReleaseWithCrashlytics)
     }
 }
+

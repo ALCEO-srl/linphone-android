@@ -31,15 +31,23 @@ class CoreService : CoreService() {
     override fun onCreate() {
         super.onCreate()
         Log.i("[Service] Created")
+        Log.w("#\$#\$#\$#\$ [SERVICE] onCreate - servizio creato")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val extras = intent?.extras
+        Log.w("#\$#\$#\$#\$ [SERVICE] onStartCommand extras=${extras?.keySet()?.joinToString()} keepAlive=${corePreferences.keepServiceAlive}")
         Log.i("[Service] Ensuring Core exists")
         if (corePreferences.keepServiceAlive) {
             Log.i("[Service] Starting as foreground to keep app alive in background")
             if (!ensureCoreExists(applicationContext, pushReceived = false, service = this, useAutoStartDescription = false)) {
-                coreContext.notificationsManager.startForeground(this, false)
+                coreContext.notificationsManager.startForeground(this, useAutoStartDescription = false, keepAlive = true)
             }
+        } else if (intent?.extras?.get("PushReceived") == true) {
+            Log.i("[Service] Starting as foreground due to incoming push (Android 15+ microphone fix)")
+            Log.w("#\$#\$#\$#\$ [SERVICE] BRANCH: PushReceived - avvio FGS PHONE_CALL")
+            ensureCoreExists(applicationContext, pushReceived = true, service = this, useAutoStartDescription = false)
+            coreContext.notificationsManager.startForeground(this, useAutoStartDescription = false, keepAlive = false)
         } else if (intent?.extras?.get("StartForeground") == true) {
             Log.i("[Service] Starting as foreground due to device boot or app update")
             if (!ensureCoreExists(applicationContext, pushReceived = false, service = this, useAutoStartDescription = true)) {
@@ -48,6 +56,16 @@ class CoreService : CoreService() {
             coreContext.checkIfForegroundServiceNotificationCanBeRemovedAfterDelay(5000)
         } else {
             ensureCoreExists(applicationContext, pushReceived = false, service = this, useAutoStartDescription = false)
+            // If a call is active, ensure THIS service instance is also in foreground with
+            // PHONE_CALL type. Without this, a new service instance created while a call
+            // is already running would never call startForeground(), leaving the app without
+            // a foreground service and causing Android 15+ to revoke microphone access.
+            if (LinphoneApplication.contextExists() && coreContext.core.callsNb > 0) {
+                Log.w("#\$#\$#\$#\$ [SERVICE] else branch con chiamata attiva - forzo startCallForeground su questa istanza")
+                coreContext.notificationsManager.startCallForeground(this)
+            } else {
+                Log.w("#\$#\$#\$#\$ [SERVICE] BRANCH: else (no extras) - nessuna chiamata attiva, niente FGS. calls=${if (LinphoneApplication.contextExists()) coreContext.core.callsNb else -1}")
+            }
         }
 
         coreContext.notificationsManager.serviceCreated(this)
@@ -61,11 +79,13 @@ class CoreService : CoreService() {
 
     override fun showForegroundServiceNotification() {
         Log.i("[Service] Starting service as foreground")
+        Log.w("#\$#\$#\$#\$ [SERVICE] showForegroundServiceNotification - promuovo a FGS con tipo PHONE_CALL")
         coreContext.notificationsManager.startCallForeground(this)
     }
 
     override fun hideForegroundServiceNotification() {
         Log.i("[Service] Stopping service as foreground")
+        Log.w("#\$#\$#\$#\$ [SERVICE] hideForegroundServiceNotification - FGS chiamata terminata")
         coreContext.notificationsManager.stopCallForeground()
     }
 
@@ -89,6 +109,7 @@ class CoreService : CoreService() {
     }
 
     override fun onDestroy() {
+        Log.w("#\$#\$#\$#\$ [SERVICE] onDestroy - SERVIZIO DISTRUTTO! calls=${if (LinphoneApplication.contextExists()) coreContext.core.callsNb else -1}")
         if (LinphoneApplication.contextExists()) {
             Log.i("[Service] Stopping")
             coreContext.notificationsManager.serviceDestroyed()

@@ -83,4 +83,8 @@ class PermissionHelper private constructor(private val context: Context) {
     fun hasPostNotificationsPermission(): Boolean {
         return Compatibility.hasPostNotificationsPermission(context)
     }
+
+    fun isIgnoringBatteryOptimizations(): Boolean {
+        return Compatibility.isIgnoringBatteryOptimizations(context)
+    }
 }

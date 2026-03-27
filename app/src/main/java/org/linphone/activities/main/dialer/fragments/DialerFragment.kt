@@ -24,9 +24,11 @@ import android.annotation.TargetApi
 import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
@@ -60,6 +62,7 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
     private lateinit var viewModel: DialerViewModel
 
     private var uploadLogsInitiatedByUs = false
+    private var permissionsChecked = false
 
     override fun getLayoutId(): Int = R.layout.dialer_fragment
 
@@ -187,6 +190,7 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
         checkForUpdate()
 
         checkPermissions()
+        permissionsChecked = true
     }
 
     override fun onPause() {
@@ -206,6 +210,11 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
         uploadLogsInitiatedByUs = false
 
         viewModel.enteredUri.value = sharedViewModel.dialerUri
+
+        if (!corePreferences.firstStart && !permissionsChecked) {
+            permissionsChecked = true
+            checkPermissions()
+        }
     }
 
     @Deprecated("Deprecated in Java")
@@ -238,6 +247,18 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
         } else if (requestCode == 2) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.i("[Dialer] POST_NOTIFICATIONS permission has been granted")
+            } else {
+                Log.w("[Dialer] POST_NOTIFICATIONS permission has been denied")
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.perm_post_notifications_denied_title)
+                    .setMessage(R.string.perm_post_notifications_denied_message)
+                    .setPositiveButton(R.string.perm_post_notifications_open_settings) { _, _ ->
+                        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            .setData(android.net.Uri.parse("package:${requireContext().packageName}"))
+                        startActivity(intent)
+                    }
+                    .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
+                    .show()
             }
             checkTelecomManagerPermissions()
         }
@@ -256,6 +277,119 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
             // Don't check the following the previous permissions are being asked
             checkTelecomManagerPermissions()
         }
+        checkFullScreenIntentPermission()
+        checkBatteryOptimization()
+        checkAutoStartPermission()
+    }
+
+    private fun checkBatteryOptimization() {
+        if (!PermissionHelper.get().isIgnoringBatteryOptimizations()) {
+            Log.w("[Dialer] App is not exempt from battery optimization, push notifications may not wake up the app")
+            val prefs = requireContext().getSharedPreferences("bcsphone_prefs", Context.MODE_PRIVATE)
+            if (prefs.getBoolean("battery_optimization_hint_shown", false)) return
+            prefs.edit().putBoolean("battery_optimization_hint_shown", true).apply()
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.perm_battery_optimization_title)
+                .setMessage(R.string.perm_battery_optimization_message)
+                .setPositiveButton(R.string.perm_battery_optimization_open_settings) { _, _ ->
+                    Compatibility.requestIgnoreBatteryOptimizations(requireContext())
+                }
+                .setNegativeButton(R.string.cancel) { dialog, _ ->
+                    Log.w("[Dialer] User refused battery optimization exemption")
+                    dialog.dismiss()
+                }
+                .show()
+        }
+    }
+
+    private fun checkFullScreenIntentPermission() {
+        if (!Compatibility.canUseFullScreenIntent(requireContext())) {
+            Log.w("[Dialer] USE_FULL_SCREEN_INTENT permission not granted, incoming call screen won't show on lock screen (Android 14+)")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.perm_full_screen_intent_title)
+                .setMessage(R.string.perm_full_screen_intent_message)
+                .setPositiveButton(R.string.perm_full_screen_intent_open_settings) { _, _ ->
+                    Compatibility.requestFullScreenIntentPermission(requireContext())
+                }
+                .setNegativeButton(R.string.cancel) { dialog, _ ->
+                    Log.w("[Dialer] User refused to grant USE_FULL_SCREEN_INTENT permission")
+                    dialog.dismiss()
+                }
+                .show()
+        }
+    }
+
+    private fun checkAutoStartPermission() {
+        val candidates = autoStartCandidates()
+        if (candidates.isEmpty()) return
+
+        val prefs = requireContext().getSharedPreferences("bcsphone_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("auto_start_hint_shown", false)) return
+        prefs.edit().putBoolean("auto_start_hint_shown", true).apply()
+
+        Log.i("[Dialer] Device ${Build.MANUFACTURER} has auto-start settings, showing hint dialog")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.perm_auto_start_title)
+            .setMessage(R.string.perm_auto_start_message)
+            .setPositiveButton(R.string.perm_auto_start_open_settings) { _, _ ->
+                openAutoStartSettings(candidates)
+            }
+            .setNegativeButton(R.string.cancel) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun autoStartCandidates(): List<ComponentName> {
+        // All known auto-start Activity component names across manufacturers.
+        // We check which ones are actually installed on this device instead of
+        // relying on Build.MANUFACTURER (which varies across firmware versions).
+        val all = listOf(
+            // Honor (MagicUI / HarmonyOS)
+            ComponentName("com.hihonor.systemmanager",
+                "com.hihonor.systemmanager.startupmgr.ui.StartupNormalAppListActivity"),
+            // Huawei (EMUI)
+            ComponentName("com.huawei.systemmanager",
+                "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"),
+            ComponentName("com.huawei.systemmanager",
+                "com.huawei.systemmanager.optimize.process.ProtectActivity"),
+            // Xiaomi / Redmi (MIUI)
+            ComponentName("com.miui.securitycenter",
+                "com.miui.permcenter.autostart.AutoStartManagementActivity"),
+            // OPPO (ColorOS)
+            ComponentName("com.coloros.safecenter",
+                "com.coloros.safecenter.permission.startup.StartupAppListActivity"),
+            ComponentName("com.oppo.safe",
+                "com.oppo.safe.permission.startup.StartupAppListActivity"),
+            // Vivo (FuntouchOS)
+            ComponentName("com.vivo.permissionmanager",
+                "com.vivo.permissionmanager.activity.PurviewTabActivity"),
+            // OnePlus
+            ComponentName("com.oneplus.security",
+                "com.oneplus.security.chainlaunch.view.ChainLaunchAppListActivity")
+        )
+        val pm = requireContext().packageManager
+        return all.filter { cn ->
+            try {
+                pm.getActivityInfo(cn, 0)
+                true
+            } catch (e: PackageManager.NameNotFoundException) {
+                false
+            }
+        }
+    }
+
+    private fun openAutoStartSettings(candidates: List<ComponentName>) {
+        for (cn in candidates) {
+            try {
+                startActivity(Intent().setComponent(cn))
+                return
+            } catch (e: Exception) {
+                Log.w("[Dialer] Auto-start intent failed for ${cn.className}: $e")
+            }
+        }
+        Log.w("[Dialer] No auto-start settings page could be opened for ${Build.MANUFACTURER}")
+        Toast.makeText(requireContext(), R.string.perm_auto_start_not_found, Toast.LENGTH_LONG).show()
     }
 
     @TargetApi(Version.API26_O_80)
