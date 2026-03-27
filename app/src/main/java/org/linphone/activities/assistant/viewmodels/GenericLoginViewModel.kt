@@ -141,10 +141,10 @@ class GenericLoginViewModel(private val accountCreator: AccountCreator) : ViewMo
         waitForServerAnswer.value = true
         coreContext.core.addListener(coreListener)
 
-        accountCreator.username = username.value
-        accountCreator.password = password.value
-        accountCreator.domain = domain.value
-        accountCreator.displayName = displayName.value
+        accountCreator.username = username.value?.trim()
+        accountCreator.password = password.value?.trim()
+        accountCreator.domain = domain.value?.trim()
+        accountCreator.displayName = displayName.value?.trim()
         accountCreator.transport = transport.value
 
         val proxyConfig: ProxyConfig? = accountCreator.createProxyConfig()
@@ -187,8 +187,8 @@ class GenericLoginViewModel(private val accountCreator: AccountCreator) : ViewMo
         }
 
         for (account in coreContext.core.accountList) {
-            if ((account.params.identityAddress?.username == username.value) &&
-                (account.params.identityAddress?.domain == domain.value)
+            if ((account.params.identityAddress?.username == username.value?.trim()) &&
+                (account.params.identityAddress?.domain == domain.value?.trim())
             ) {
 
                 if (account.params.natPolicy == null) {
@@ -232,6 +232,8 @@ class GenericLoginViewModel(private val accountCreator: AccountCreator) : ViewMo
     }
 
     private fun isLoginButtonEnabled(): Boolean {
-        return username.value.orEmpty().isNotEmpty() && domain.value.orEmpty().isNotEmpty() && password.value.orEmpty().isNotEmpty()
+        return username.value.orEmpty().trim().isNotEmpty() &&
+            domain.value.orEmpty().trim().isNotEmpty() &&
+            password.value.orEmpty().trim().isNotEmpty()
     }
 }

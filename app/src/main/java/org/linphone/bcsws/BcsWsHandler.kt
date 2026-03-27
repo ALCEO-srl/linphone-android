@@ -1,15 +1,19 @@
 package org.linphone.bcsws
 
 import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.*
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import org.linphone.core.tools.Log
+import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
@@ -101,6 +105,8 @@ interface BcsWsService {
 class BcsWsHandler(server: String, port: String) {
 
     companion object {
+        private const val TOKEN_EXPIRY_MARGIN_MS = 60_000L // rinnova il token 60s prima della scadenza
+
         fun getUnsafeOkHttpClient(): OkHttpClient.Builder {
             try {
                 // Create a trust manager that does not validate certificate chains
@@ -130,6 +136,9 @@ class BcsWsHandler(server: String, port: String) {
                 val builder = OkHttpClient.Builder()
                 builder.sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
                 builder.hostnameVerifier { _, _ -> true }
+                builder.connectTimeout(30, TimeUnit.SECONDS)
+                builder.readTimeout(30, TimeUnit.SECONDS)
+                builder.writeTimeout(30, TimeUnit.SECONDS)
 
                 return builder
             } catch (e: Exception) {
@@ -138,7 +147,9 @@ class BcsWsHandler(server: String, port: String) {
         }
     }
 
+    private val tokenMutex = Mutex()
     private var bearerToken = ""
+    private var tokenExpiryTime = 0L // epoch millis
     private var user = ""
     private var domain = ""
     private var password = ""
@@ -148,64 +159,75 @@ class BcsWsHandler(server: String, port: String) {
         domain = aDomain
         password = aPassword
         bearerToken = ""
+        tokenExpiryTime = 0L
     }
 
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://$server:$port/")
         .addConverterFactory(GsonConverterFactory.create())
         .client(getUnsafeOkHttpClient().build())
-        //.client(OkHttpClient.Builder().build())
         .build()
 
     private val bcsWsService = retrofit.create(BcsWsService::class.java)
 
+    // Garantisce un token valido e non scaduto; serializza eventuali refresh concorrenti.
+    private suspend fun ensureValidToken() {
+        tokenMutex.withLock {
+            if (bearerToken.isEmpty() || System.currentTimeMillis() >= tokenExpiryTime) {
+                Log.i("[BcsWsHandler] Token assente o scaduto, richiedo nuovo token")
+                val credentials = Credentials.basic("$user@$domain", password)
+                val authResponse = bcsWsService.requestAuthToken(credentials, domain, domain)
+                bearerToken = authResponse.access_token
+                tokenExpiryTime = System.currentTimeMillis() +
+                    (authResponse.expires_in * 1000L) - TOKEN_EXPIRY_MARGIN_MS
+                Log.i("[BcsWsHandler] Nuovo token acquisito, scade in ${authResponse.expires_in}s")
+            }
+        }
+    }
+
+    // Esegue la chiamata con il token corrente; in caso di 401 rinnova il token e riprova una volta.
+    private suspend fun <T> withAuth(call: suspend (token: String) -> T): T {
+        ensureValidToken()
+        return try {
+            call("Bearer $bearerToken")
+        } catch (e: HttpException) {
+            if (e.code() == 401) {
+                Log.i("[BcsWsHandler] 401 ricevuto, rinnovo il token e riprovo")
+                tokenMutex.withLock {
+                    bearerToken = ""
+                    tokenExpiryTime = 0L
+                }
+                ensureValidToken()
+                call("Bearer $bearerToken")
+            } else {
+                throw e
+            }
+        }
+    }
+
     suspend fun fetchUserConf(): UserConf {
         return withContext(Dispatchers.IO) {
-            requestAuthToken()
-            bcsWsService.getUserConf("Bearer $bearerToken", domain, domain, user)
+            withAuth { token -> bcsWsService.getUserConf(token, domain, domain, user) }
         }
     }
 
     suspend fun fetchDirectory(filter: String = ""): DirectoryResponse {
         return withContext(Dispatchers.IO) {
-            requestAuthToken()
-            bcsWsService.getDirectory("Bearer $bearerToken", domain, domain, "10000", filter)
-        }
-    }
-
-    suspend fun requestAuthToken() {
-        // Controllo se il bearerToken è vuoto
-        Log.i("requestAuthToken(): Current bearerToken [$bearerToken]")
-        if (bearerToken.isNullOrEmpty()) {
-            val credentials = Credentials.basic(user + "@" + domain, password)
-
-            // Richiesta di un nuovo token di autenticazione
-            val authResponse = bcsWsService.requestAuthToken(credentials, domain, domain)
-            if (authResponse != null) {
-                // Assegnazione del nuovo token
-                bearerToken = authResponse.access_token
-                Log.i("requestAuthToken(): New bearerToken [$bearerToken]")
-            } else {
-                Log.i("requestAuthToken(): Request failed")
-                // Gestione del caso in cui l'authResponse è nullo
-                throw IllegalStateException("Authentication failed: authResponse is null")
-            }
+            withAuth { token -> bcsWsService.getDirectory(token, domain, domain, "10000", filter) }
         }
     }
 
     suspend fun fetchCallReport(limit: Int? = null, offset: Int? = null): CallReportResponse {
         return withContext(Dispatchers.IO) {
-            requestAuthToken()
-            bcsWsService.getCallReport("Bearer $bearerToken", domain, domain, user, limit, offset)
+            withAuth { token -> bcsWsService.getCallReport(token, domain, domain, user, limit, offset) }
         }
     }
 
     suspend fun clearAllCallReportItems() {
         return withContext(Dispatchers.IO) {
-            requestAuthToken()
-            val response = bcsWsService.clearCallReport("Bearer $bearerToken", domain, domain, user)
+            val response = withAuth { token -> bcsWsService.clearCallReport(token, domain, domain, user) }
             if (!response.isSuccessful) {
-                Log.e("BcsWsHandler", "Failed to clear call report: ${response.code()} - ${response.errorBody()?.string()}")
+                Log.e("[BcsWsHandler] clearAllCallReportItems failed: ${response.code()} - ${response.errorBody()?.string()}")
                 throw IllegalStateException("Failed to clear call report")
             }
         }
@@ -213,24 +235,21 @@ class BcsWsHandler(server: String, port: String) {
 
     suspend fun addCallReportEntry(item: CallReportItem): CallReportItem {
         return withContext(Dispatchers.IO) {
-            requestAuthToken()
-            bcsWsService.addCallReportItem("Bearer $bearerToken", domain, domain, user, item)
+            withAuth { token -> bcsWsService.addCallReportItem(token, domain, domain, user, item) }
         }
     }
 
     suspend fun fetchCallReportItem(itemId: String): CallReportItem {
         return withContext(Dispatchers.IO) {
-            requestAuthToken()
-            bcsWsService.getCallReportItem("Bearer $bearerToken", domain, domain, user, itemId)
+            withAuth { token -> bcsWsService.getCallReportItem(token, domain, domain, user, itemId) }
         }
     }
 
     suspend fun deleteCallReportEntry(itemId: String) {
         return withContext(Dispatchers.IO) {
-            requestAuthToken()
-            val response = bcsWsService.deleteCallReportItem("Bearer $bearerToken", domain, domain, user, itemId)
+            val response = withAuth { token -> bcsWsService.deleteCallReportItem(token, domain, domain, user, itemId) }
             if (!response.isSuccessful) {
-                Log.e("BcsWsHandler", "Failed to delete call report item: ${response.code()} - ${response.errorBody()?.string()}")
+                Log.e("[BcsWsHandler] deleteCallReportEntry($itemId) failed: ${response.code()} - ${response.errorBody()?.string()}")
                 throw IllegalStateException("Failed to delete call report item")
             }
         }
