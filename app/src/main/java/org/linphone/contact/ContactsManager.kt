@@ -28,7 +28,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.provider.ContactsContract
+// import android.provider.ContactsContract // removed: native contacts disabled
 import android.util.Patterns
 import androidx.core.app.Person
 import androidx.core.graphics.drawable.IconCompat
@@ -141,14 +141,7 @@ class ContactsManager(private val context: Context) {
 
     @Synchronized
     fun getAndroidContactIdFromUri(uri: Uri): String? {
-        val projection = arrayOf(ContactsContract.Data.CONTACT_ID)
-        val cursor = context.contentResolver.query(uri, projection, null, null, null)
-        if (cursor?.moveToFirst() == true) {
-            val nameColumnIndex = cursor.getColumnIndex(ContactsContract.Data.CONTACT_ID)
-            val id = cursor.getString(nameColumnIndex)
-            cursor.close()
-            return id
-        }
+        // Native contacts access removed: contacts are provided by BcsWs buddy list.
         return null
     }
 
@@ -214,26 +207,8 @@ class ContactsManager(private val context: Context) {
     }
 
     private fun initSyncAccount() {
-        val accountManager = context.getSystemService(Context.ACCOUNT_SERVICE) as AccountManager
-        val accounts = accountManager.getAccountsByType(context.getString(R.string.sync_account_type))
-        if (accounts.isEmpty()) {
-            val newAccount = Account(
-                context.getString(R.string.sync_account_name),
-                context.getString(
-                    R.string.sync_account_type
-                )
-            )
-            try {
-                accountManager.addAccountExplicitly(newAccount, null, null)
-                Log.i("[Contacts Manager] Contact account added")
-            } catch (e: Exception) {
-                Log.e("[Contacts Manager] Couldn't initialize sync account: $e")
-            }
-        } else {
-            for (account in accounts) {
-                Log.i("[Contacts Manager] Found account with name [${account.name}] and type [${account.type}]")
-            }
-        }
+        // Sync account disabled: contacts are provided by BcsWs buddy list.
+        Log.i("[Contacts Manager] Sync account initialization skipped (BcsWs mode)")
     }
 
     fun getAvailableSyncAccounts(): List<Triple<String, String, Drawable?>> {
@@ -381,35 +356,8 @@ fun Friend.getThumbnailUri(): Uri? {
 }
 
 fun Friend.getPictureUri(thumbnailPreferred: Boolean = false): Uri? {
-    val refKey = refKey
-    if (refKey != null) {
-        try {
-            val lookupUri = ContentUris.withAppendedId(
-                ContactsContract.Contacts.CONTENT_URI,
-                refKey.toLong()
-            )
-
-            if (!thumbnailPreferred) {
-                val pictureUri = Uri.withAppendedPath(
-                    lookupUri,
-                    ContactsContract.Contacts.Photo.DISPLAY_PHOTO
-                )
-                // Check that the URI points to a real file
-                val contentResolver = coreContext.context.contentResolver
-                try {
-                    if (contentResolver.openAssetFileDescriptor(pictureUri, "r") != null) {
-                        return pictureUri
-                    }
-                } catch (ioe: IOException) { }
-            }
-
-            // Fallback to thumbnail if high res picture isn't available
-            return Uri.withAppendedPath(
-                lookupUri,
-                ContactsContract.Contacts.Photo.CONTENT_DIRECTORY
-            )
-        } catch (e: Exception) { }
-    } else if (photo != null) {
+    // Native contacts photo access removed: use only the photo URI set on the Friend object.
+    if (photo != null) {
         try {
             return Uri.parse(photo)
         } catch (e: Exception) { }

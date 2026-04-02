@@ -34,7 +34,7 @@ import android.view.*
 import androidx.emoji.bundled.BundledEmojiCompatConfig
 import androidx.emoji.text.EmojiCompat
 import androidx.lifecycle.*
-import androidx.loader.app.LoaderManager
+// import androidx.loader.app.LoaderManager // removed: native contacts disabled
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import java.io.File
 import java.io.IOException
@@ -64,7 +64,7 @@ import org.linphone.bcsws.DirectoryItem
 import org.linphone.bcsws.RemoteParty
 import org.linphone.compatibility.Compatibility
 import org.linphone.compatibility.PhoneStateInterface
-import org.linphone.contact.ContactLoader
+// import org.linphone.contact.ContactLoader // removed: native contacts disabled
 import org.linphone.contact.ContactsManager
 import org.linphone.contact.getContactForPhoneNumberOrAddress
 import org.linphone.core.tools.Log
@@ -94,8 +94,6 @@ class CoreContext(
     var bcsWsHandler: BcsWsHandler? = null
 
     private var bcsDirectoryItems: List<DirectoryItem>? = null
-
-    private val contactLoader = ContactLoader()
 
     private val collator: Collator = Collator.getInstance()
 
@@ -622,13 +620,8 @@ class CoreContext(
     }
 
     fun fetchContacts() {
-        if (corePreferences.enableNativeAddressBookIntegration) {
-            if (PermissionHelper.required(context).hasReadContactsPermission()) {
-                Log.i("[Context] Init contacts loader")
-                val manager = LoaderManager.getInstance(this@CoreContext)
-                manager.restartLoader(0, null, contactLoader)
-            }
-        }
+        // Native contacts loading disabled: contacts are provided by BcsWs buddy list.
+        Log.i("[Context] fetchContacts skipped (BcsWs mode)")
     }
 
     fun newAccountConfigured(isLinphoneAccount: Boolean) {

@@ -44,11 +44,13 @@ class PermissionHelper private constructor(private val context: Context) {
     }
 
     fun hasReadContactsPermission(): Boolean {
-        return hasPermission(Manifest.permission.READ_CONTACTS)
+        // Native contacts access removed: contacts are provided by BcsWs buddy list.
+        return false
     }
 
     fun hasWriteContactsPermission(): Boolean {
-        return hasPermission(Manifest.permission.WRITE_CONTACTS)
+        // Native contacts access removed: contacts are provided by BcsWs buddy list.
+        return false
     }
 
     fun hasReadPhoneStatePermission(): Boolean {

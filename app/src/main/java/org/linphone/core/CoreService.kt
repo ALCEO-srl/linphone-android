@@ -45,9 +45,10 @@ class CoreService : CoreService() {
             coreContext.notificationsManager.startForeground(this, useAutoStartDescription = false)
         } else if (intent?.extras?.get("StartForeground") == true) {
             Log.i("[Service] Starting as foreground due to device boot or app update")
-            if (!ensureCoreExists(applicationContext, pushReceived = false, service = this, useAutoStartDescription = true)) {
-                coreContext.notificationsManager.startForeground(this, true)
-            }
+            ensureCoreExists(applicationContext, pushReceived = false, service = this, useAutoStartDescription = true)
+            // Always call startForeground() on this service instance — a new instance never
+            // inherits the foreground state of a previous one, regardless of core state.
+            coreContext.notificationsManager.startForeground(this, true)
             coreContext.checkIfForegroundServiceNotificationCanBeRemovedAfterDelay(5000)
         } else {
             ensureCoreExists(applicationContext, pushReceived = false, service = this, useAutoStartDescription = false)
@@ -59,7 +60,11 @@ class CoreService : CoreService() {
                 Log.w("#\$#\$#\$#\$ [SERVICE] else branch con chiamata attiva - forzo startCallForeground su questa istanza")
                 coreContext.notificationsManager.startCallForeground(this)
             } else {
-                Log.w("#\$#\$#\$#\$ [SERVICE] BRANCH: else (no extras) - nessuna chiamata attiva, niente FGS. calls=${if (LinphoneApplication.contextExists()) coreContext.core.callsNb else -1}")
+                // No calls active but startForegroundService() was called — must call
+                // startForeground() within 5s to avoid ForegroundServiceDidNotStartInTimeException.
+                Log.w("#\$#\$#\$#\$ [SERVICE] BRANCH: else (no extras) - nessuna chiamata attiva, avvio FGS temporanea")
+                coreContext.notificationsManager.startForeground(this, useAutoStartDescription = false)
+                coreContext.checkIfForegroundServiceNotificationCanBeRemovedAfterDelay(5000)
             }
         }
 
