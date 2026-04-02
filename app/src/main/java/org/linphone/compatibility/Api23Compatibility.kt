@@ -283,17 +283,16 @@ class Api23Compatibility {
         }
 
         fun requestReadExternalStorageAndCameraPermissions(fragment: Fragment, code: Int) {
+            // READ_EXTERNAL_STORAGE removed: attachment sending is disabled.
             fragment.requestPermissions(
-                arrayOf(
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.CAMERA
-                ),
+                arrayOf(Manifest.permission.CAMERA),
                 code
             )
         }
 
         fun hasReadExternalStoragePermission(context: Context): Boolean {
-            return Compatibility.hasPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)
+            // Storage read permissions removed: attachment sending is disabled.
+            return false
         }
     }
 }

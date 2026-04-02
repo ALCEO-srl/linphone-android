@@ -75,8 +75,6 @@ class ControlsViewModel : ViewModel() {
 
     val forceDisableProximitySensor = MutableLiveData<Boolean>()
 
-    val showTakeSnapshotButton = MutableLiveData<Boolean>()
-
     val goToConferenceParticipantsListEvent: MutableLiveData<Event<Boolean>> by lazy {
         MutableLiveData<Event<Boolean>>()
     }
@@ -325,22 +323,6 @@ class ControlsViewModel : ViewModel() {
         coreContext.switchCamera()
     }
 
-    fun takeSnapshot() {
-        if (!PermissionHelper.get().hasWriteExternalStoragePermission()) {
-            askPermissionEvent.value = Event(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        } else {
-            val currentCall = coreContext.core.currentCall
-            if (currentCall != null && currentCall.currentParams.isVideoEnabled) {
-                val fileName = System.currentTimeMillis().toString() + ".jpeg"
-                val fullPath = FileUtils.getFileStoragePath(fileName).absolutePath
-                Log.i("[Call Controls] Snapshot will be save under $fullPath")
-                currentCall.takeVideoSnapshot(fullPath)
-            } else {
-                Log.e("[Call Controls] Current call doesn't have video, can't take snapshot")
-            }
-        }
-    }
-
     fun showExtraButtons() {
         extraButtonsMenuAnimator.start()
         showExtras.value = true
@@ -462,7 +444,6 @@ class ControlsViewModel : ViewModel() {
         }
 
         isVideoEnabled.value = enabled
-        showTakeSnapshotButton.value = enabled && corePreferences.showScreenshotButton
         var isVideoBeingSent = if (coreContext.core.currentCall?.conference != null) {
             val videoDirection = coreContext.core.currentCall?.currentParams?.videoDirection
             videoDirection == MediaDirection.SendRecv || videoDirection == MediaDirection.SendOnly

@@ -36,18 +36,13 @@ class CoreService : CoreService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val extras = intent?.extras
-        Log.w("#\$#\$#\$#\$ [SERVICE] onStartCommand extras=${extras?.keySet()?.joinToString()} keepAlive=${corePreferences.keepServiceAlive}")
+        Log.w("#\$#\$#\$#\$ [SERVICE] onStartCommand extras=${extras?.keySet()?.joinToString()}")
         Log.i("[Service] Ensuring Core exists")
-        if (corePreferences.keepServiceAlive) {
-            Log.i("[Service] Starting as foreground to keep app alive in background")
-            if (!ensureCoreExists(applicationContext, pushReceived = false, service = this, useAutoStartDescription = false)) {
-                coreContext.notificationsManager.startForeground(this, useAutoStartDescription = false, keepAlive = true)
-            }
-        } else if (intent?.extras?.get("PushReceived") == true) {
+        if (intent?.extras?.get("PushReceived") == true) {
             Log.i("[Service] Starting as foreground due to incoming push (Android 15+ microphone fix)")
             Log.w("#\$#\$#\$#\$ [SERVICE] BRANCH: PushReceived - avvio FGS PHONE_CALL")
             ensureCoreExists(applicationContext, pushReceived = true, service = this, useAutoStartDescription = false)
-            coreContext.notificationsManager.startForeground(this, useAutoStartDescription = false, keepAlive = false)
+            coreContext.notificationsManager.startForeground(this, useAutoStartDescription = false)
         } else if (intent?.extras?.get("StartForeground") == true) {
             Log.i("[Service] Starting as foreground due to device boot or app update")
             if (!ensureCoreExists(applicationContext, pushReceived = false, service = this, useAutoStartDescription = true)) {
@@ -93,15 +88,13 @@ class CoreService : CoreService() {
         if (LinphoneApplication.contextExists()) {
             if (coreContext.core.callsNb > 0) {
                 Log.w("[Service] Task removed but there is at least one active call, do not stop the Core!")
-            } else if (!corePreferences.keepServiceAlive) {
+            } else {
                 if (coreContext.core.isInBackground) {
                     Log.i("[Service] Task removed, stopping Core")
                     coreContext.stop()
                 } else {
                     Log.w("[Service] Task removed but Core is not in background, skipping")
                 }
-            } else {
-                Log.i("[Service] Task removed but we were asked to keep the service alive, so doing nothing")
             }
         }
 

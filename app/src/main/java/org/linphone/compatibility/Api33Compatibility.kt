@@ -42,21 +42,16 @@ class Api33Compatibility {
         }
 
         fun requestReadMediaAndCameraPermissions(fragment: Fragment, code: Int) {
+            // READ_MEDIA_* removed: attachment sending is disabled.
             fragment.requestPermissions(
-                arrayOf(
-                    Manifest.permission.READ_MEDIA_IMAGES,
-                    Manifest.permission.READ_MEDIA_VIDEO,
-                    Manifest.permission.READ_MEDIA_AUDIO,
-                    Manifest.permission.CAMERA
-                ),
+                arrayOf(Manifest.permission.CAMERA),
                 code
             )
         }
 
         fun hasReadExternalStoragePermission(context: Context): Boolean {
-            return Compatibility.hasPermission(context, Manifest.permission.READ_MEDIA_IMAGES) ||
-                Compatibility.hasPermission(context, Manifest.permission.READ_MEDIA_VIDEO) ||
-                Compatibility.hasPermission(context, Manifest.permission.READ_MEDIA_AUDIO)
+            // Storage read permissions removed: attachment sending is disabled.
+            return false
         }
 
         fun hasTelecomManagerFeature(context: Context): Boolean {

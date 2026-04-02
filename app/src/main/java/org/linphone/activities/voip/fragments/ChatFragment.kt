@@ -86,7 +86,7 @@ class ChatFragment : GenericFragment<VoipChatFragmentBinding>() {
             if (PermissionHelper.get().hasReadExternalStoragePermission() || PermissionHelper.get().hasCameraPermission()) {
                 pickFile()
             } else {
-                Log.i("[Chat] Asking for READ_EXTERNAL_STORAGE and CAMERA permissions")
+                Log.i("[Chat] Asking for CAMERA permission")
                 Compatibility.requestReadExternalStorageAndCameraPermissions(this, 0)
             }
         }

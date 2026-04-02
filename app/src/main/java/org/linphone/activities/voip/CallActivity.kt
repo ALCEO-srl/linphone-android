@@ -303,10 +303,6 @@ class CallActivity : ProximitySensorActivity() {
                     Compatibility.BLUETOOTH_CONNECT -> if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.i("[Call Activity] BLUETOOTH_CONNECT permission has been granted")
                     }
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE -> if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        Log.i("[Call Activity] WRITE_EXTERNAL_STORAGE permission has been granted, taking snapshot")
-                        controlsViewModel.takeSnapshot()
-                    }
                 }
             }
         }

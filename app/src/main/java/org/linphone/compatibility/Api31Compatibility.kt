@@ -211,22 +211,15 @@ class Api31Compatibility {
             }
         }
 
-        fun startForegroundService(service: Service, notifId: Int, notif: Notification?, keepAlive: Boolean = false) {
+        fun startForegroundService(service: Service, notifId: Int, notif: Notification?) {
             try {
-                // For keep-alive mode (no push, permanent background service) use specialUse
-                // on Android 14+ — phoneCall type is not appropriate for a non-active-call service,
-                // and dataSync is limited to 6h/day on Android 15+.
-                // For all other cases (incoming call from push) use phoneCall, which is exempt
-                // from the background "eligible state" restriction for RECORD_AUDIO.
-                val serviceType = if (keepAlive && Build.VERSION.SDK_INT >= 34) {
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-                } else {
-                    // Include MICROPHONE alongside PHONE_CALL so Android 15+ doesn't suspend
-                    // audio capture when the screen turns off or the app goes to background.
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-
-                }
-                service.startForeground(notifId, notif!!, serviceType)
+                // Include MICROPHONE alongside PHONE_CALL so Android 15+ doesn't suspend
+                // audio capture when the screen turns off or the app goes to background.
+                service.startForeground(
+                    notifId,
+                    notif!!,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+                )
             } catch (fssnae: ForegroundServiceStartNotAllowedException) {
                 Log.e("[Api31 Compatibility] Can't start service as foreground! $fssnae")
             } catch (se: SecurityException) {

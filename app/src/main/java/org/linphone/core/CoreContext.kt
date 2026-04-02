@@ -482,11 +482,6 @@ class CoreContext(
             FileUtils.clearExistingPlainFiles()
         }
 
-        if (corePreferences.keepServiceAlive) {
-            Log.i("[Context] Background mode setting is enabled, starting Service")
-            notificationsManager.startForeground()
-        }
-
         _lifecycleRegistry.currentState = Lifecycle.State.RESUMED
         Log.i("[Context] Started")
     }
@@ -652,8 +647,7 @@ class CoreContext(
                 core.mediaEncryption = MediaEncryption.SRTP
             }
         } else {
-            Log.i("[Context] Background mode with foreground service automatically enabled")
-            corePreferences.keepServiceAlive = false //dms
+            Log.i("[Context] Third-party account configured, starting foreground service")
             notificationsManager.startForeground()
         }
 

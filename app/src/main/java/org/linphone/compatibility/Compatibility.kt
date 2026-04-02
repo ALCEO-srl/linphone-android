@@ -149,11 +149,8 @@ class Compatibility {
         }
 
         fun hasReadExternalStoragePermission(context: Context): Boolean {
-            return if (Version.sdkAboveOrEqual(Version.API33_ANDROID_13_TIRAMISU)) {
-                Api33Compatibility.hasReadExternalStoragePermission(context)
-            } else {
-                Api23Compatibility.hasReadExternalStoragePermission(context)
-            }
+            // Storage read permissions removed: attachment sending is disabled.
+            return false
         }
 
         fun getDeviceName(context: Context): String {
@@ -285,9 +282,9 @@ class Compatibility {
             }
         }
 
-        fun startForegroundService(service: Service, notifId: Int, notif: Notification?, keepAlive: Boolean = false) {
+        fun startForegroundService(service: Service, notifId: Int, notif: Notification?) {
             if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
-                Api31Compatibility.startForegroundService(service, notifId, notif, keepAlive)
+                Api31Compatibility.startForegroundService(service, notifId, notif)
             } else {
                 Api23Compatibility.startForegroundService(service, notifId, notif)
             }

@@ -98,8 +98,6 @@ class AdvancedSettingsFragment : GenericSettingFragment<SettingsAdvancedFragment
             }
         }
 
-        viewModel.backgroundModeEnabled.value = !DeviceUtils.isAppUserRestricted(requireContext())
-
         viewModel.goToBatterySettingsEvent.observe(
             viewLifecycleOwner
         ) {
