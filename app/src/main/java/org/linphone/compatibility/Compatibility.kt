@@ -112,20 +112,6 @@ class Compatibility {
             } else true
         }
 
-        fun isIgnoringBatteryOptimizations(context: Context): Boolean {
-            val powerManager = context.getSystemService(android.os.PowerManager::class.java)
-            return powerManager.isIgnoringBatteryOptimizations(context.packageName)
-        }
-
-        fun requestIgnoreBatteryOptimizations(context: Context) {
-            try {
-                val intent = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                    .setData(Uri.parse("package:${context.packageName}"))
-                context.startActivity(intent)
-            } catch (e: Exception) {
-                Log.e("[Compatibility] Can't request battery optimization exemption: $e")
-            }
-        }
 
         fun canUseFullScreenIntent(context: Context): Boolean {
             if (Build.VERSION.SDK_INT >= 34) {

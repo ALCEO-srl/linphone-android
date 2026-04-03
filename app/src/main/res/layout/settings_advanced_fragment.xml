@@ -170,12 +170,6 @@
 
                 <include
                     layout="@layout/settings_widget_basic"
-                    android:visibility="@{viewModel.batterySettingsVisibility ? View.VISIBLE : View.GONE}"
-                    linphone:listener="@{viewModel.goToBatterySettingsListener}"
-                    linphone:title="@{@string/advanced_settings_go_to_battery_optimization_settings}" />
-
-                <include
-                    layout="@layout/settings_widget_basic"
                     android:visibility="@{viewModel.powerManagerSettingsVisibility ? View.VISIBLE : View.GONE}"
                     linphone:listener="@{viewModel.goToPowerManagerSettingsListener}"
                     linphone:title="@{@string/advanced_settings_go_to_power_manager_settings}" />

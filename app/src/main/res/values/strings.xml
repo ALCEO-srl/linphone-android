@@ -911,10 +911,6 @@
     <string name="perm_post_notifications_denied_message">Without notification permission you will not receive incoming call or message alerts.\n\nYou can enable it at any time from the app settings.</string>
     <string name="perm_post_notifications_open_settings">Open settings</string>
 
-    <!-- Battery optimization exemption -->
-    <string name="perm_battery_optimization_title">Battery optimization</string>
-    <string name="perm_battery_optimization_message">To receive incoming calls when the app is in the background, please disable battery optimization for this app.\n\nWithout this, the system may delay or block push notifications.</string>
-    <string name="perm_battery_optimization_open_settings">Disable optimization</string>
 
     <!-- USE_FULL_SCREEN_INTENT permission (Android 14+) -->
     <string name="perm_full_screen_intent_title">Incoming call display permission</string>

@@ -5,7 +5,7 @@ plugins {
 }
 
 def appVersionName = "5.2.0"
-def appVersionCode = 50007
+def appVersionCode = 50008
 
 static def getPackageName() {
     return "com.alceo.bcsphone"

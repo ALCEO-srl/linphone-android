@@ -278,28 +278,7 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
             checkTelecomManagerPermissions()
         }
         checkFullScreenIntentPermission()
-        checkBatteryOptimization()
         checkAutoStartPermission()
-    }
-
-    private fun checkBatteryOptimization() {
-        if (!PermissionHelper.get().isIgnoringBatteryOptimizations()) {
-            Log.w("[Dialer] App is not exempt from battery optimization, push notifications may not wake up the app")
-            val prefs = requireContext().getSharedPreferences("bcsphone_prefs", Context.MODE_PRIVATE)
-            if (prefs.getBoolean("battery_optimization_hint_shown", false)) return
-            prefs.edit().putBoolean("battery_optimization_hint_shown", true).apply()
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.perm_battery_optimization_title)
-                .setMessage(R.string.perm_battery_optimization_message)
-                .setPositiveButton(R.string.perm_battery_optimization_open_settings) { _, _ ->
-                    Compatibility.requestIgnoreBatteryOptimizations(requireContext())
-                }
-                .setNegativeButton(R.string.cancel) { dialog, _ ->
-                    Log.w("[Dialer] User refused battery optimization exemption")
-                    dialog.dismiss()
-                }
-                .show()
-        }
     }
 
     private fun checkFullScreenIntentPermission() {

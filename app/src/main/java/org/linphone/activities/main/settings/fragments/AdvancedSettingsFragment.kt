@@ -98,19 +98,6 @@ class AdvancedSettingsFragment : GenericSettingFragment<SettingsAdvancedFragment
             }
         }
 
-        viewModel.goToBatterySettingsEvent.observe(
-            viewLifecycleOwner
-        ) {
-            it.consume {
-                try {
-                    val intent = Intent("android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS")
-                    startActivity(intent)
-                } catch (anfe: ActivityNotFoundException) {
-                    Log.e("[Advanced Settings] ActivityNotFound exception: ", anfe)
-                }
-            }
-        }
-
         viewModel.powerManagerSettingsVisibility.value = PowerManagerUtils.getDevicePowerManagerIntent(requireContext()) != null
         viewModel.goToPowerManagerSettingsEvent.observe(
             viewLifecycleOwner

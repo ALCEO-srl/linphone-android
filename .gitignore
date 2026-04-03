@@ -28,4 +28,4 @@ app/releaseWithCrashlytics
 keystore.properties
 app/src/main/res/xml/contacts.xml
 app/src/main/assets/turn_default
-keystroke/
+keystroke

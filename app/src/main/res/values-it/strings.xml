@@ -888,10 +888,6 @@
     <string name="perm_post_notifications_denied_message">Senza il permesso per le notifiche non riceverai avvisi di chiamate in arrivo o messaggi.\n\nPuoi abilitarlo in qualsiasi momento dalle impostazioni dell\'app.</string>
     <string name="perm_post_notifications_open_settings">Apri impostazioni</string>
 
-    <!-- Battery optimization exemption -->
-    <string name="perm_battery_optimization_title">Ottimizzazione batteria</string>
-    <string name="perm_battery_optimization_message">Per ricevere chiamate in arrivo con l\'app in background, disabilita l\'ottimizzazione batteria per questa app.\n\nSenza questa impostazione il sistema potrebbe ritardare o bloccare le notifiche push.</string>
-    <string name="perm_battery_optimization_open_settings">Disabilita ottimizzazione</string>
 
     <!-- USE_FULL_SCREEN_INTENT permission (Android 14+) -->
     <string name="perm_full_screen_intent_title">Permesso visualizzazione chiamate in arrivo</string>

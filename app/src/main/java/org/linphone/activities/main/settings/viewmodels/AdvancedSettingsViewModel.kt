@@ -126,14 +126,6 @@ class AdvancedSettingsViewModel : LogsUploadViewModel() {
     }
     val disableSecureFragment = MutableLiveData<Boolean>()
 
-    val goToBatterySettingsListener = object : SettingListenerStub() {
-        override fun onClicked() {
-            goToBatterySettingsEvent.value = Event(true)
-        }
-    }
-    val goToBatterySettingsEvent = MutableLiveData<Event<Boolean>>()
-    val batterySettingsVisibility = MutableLiveData<Boolean>()
-
     val goToPowerManagerSettingsListener = object : SettingListenerStub() {
         override fun onClicked() {
             goToPowerManagerSettingsEvent.value = Event(true)
@@ -167,6 +159,5 @@ class AdvancedSettingsViewModel : LogsUploadViewModel() {
         vfs.value = prefs.vfsEnabled
         disableSecureFragment.value = prefs.disableSecureMode
 
-        batterySettingsVisibility.value = true
     }
 }
