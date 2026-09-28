@@ -25,6 +25,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.Display
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
@@ -51,6 +52,7 @@ abstract class GenericActivity : AppCompatActivity() {
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         Log.i("[Generic Activity] Ensuring Core exists")

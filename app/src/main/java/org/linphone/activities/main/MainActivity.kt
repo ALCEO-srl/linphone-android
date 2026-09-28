@@ -108,10 +108,9 @@ class MainActivity : GenericActivity(), SnackBarActivity, NavController.OnDestin
     private var shouldTabsBeVisibleDueToOrientationAndKeyboard = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Must be done before the setContentView
+        // Must be called before super.onCreate() to switch theme to postSplashScreenTheme (AppTheme/NoActionBar)
         installSplashScreen()
+        super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.main_activity)
         binding.lifecycleOwner = this
