@@ -118,7 +118,7 @@ class MainActivity : GenericActivity(), SnackBarActivity, NavController.OnDestin
         // Android 15+ enforces edge-to-edge: content extends behind status bar.
         // Apply system bar insets as padding so the layout starts below the status bar.
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, maxOf(systemBars.bottom, ime.bottom))
             insets

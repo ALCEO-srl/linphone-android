@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
         <import type="android.view.View"/>
@@ -21,11 +22,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- dms: numpad on the right at full height, phone landscape is too short to stack it -->
+        <include
+            android:id="@+id/numpad_layout"
+            layout="@layout/numpad"
+            android:layout_width="300dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            app:keyListener="@{viewModel.onKeyClick}" />
+
         <RelativeLayout
             android:id="@+id/address_bar"
             android:layout_width="match_parent"
             android:layout_height="@dimen/main_activity_top_bar_size"
             android:layout_alignParentTop="true"
+            android:layout_toLeftOf="@id/numpad_layout"
             android:background="?attr/lightToolbarBackgroundColor">
 
             <ImageView
@@ -65,6 +76,7 @@
         <LinearLayout
             android:id="@+id/controls"
             android:layout_alignParentBottom="true"
+            android:layout_toLeftOf="@id/numpad_layout"
             android:layout_width="match_parent"
             android:layout_height="@dimen/main_activity_top_bar_size">
 
@@ -131,6 +143,7 @@
             android:layout_height="match_parent"
             android:layout_below="@id/address_bar"
             android:layout_above="@id/controls"
+            android:layout_toLeftOf="@id/numpad_layout"
             android:padding="30dp"
             android:layout_centerHorizontal="true"
             android:contentDescription="@null"

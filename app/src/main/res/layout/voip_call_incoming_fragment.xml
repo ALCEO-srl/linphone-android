@@ -75,6 +75,7 @@
             android:layout_margin="10dp"
             android:contentDescription="@null"
             android:background="@drawable/generated_avatar_bg"
+            app:layout_constraintDimensionRatio="1:1"
             coilVoipContactAlt="@{callsViewModel.currentCallData}"
             app:layout_constraintBottom_toTopOf="@id/caller_name"
             app:layout_constraintEnd_toEndOf="parent"

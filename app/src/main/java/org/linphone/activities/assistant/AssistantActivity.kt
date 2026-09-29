@@ -46,7 +46,7 @@ class AssistantActivity : GenericActivity(), SnackBarActivity {
         coordinator = findViewById(R.id.coordinator)
 
         ViewCompat.setOnApplyWindowInsetsListener(coordinator) { view, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, maxOf(systemBars.bottom, ime.bottom))
             insets

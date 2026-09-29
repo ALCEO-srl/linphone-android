@@ -12,10 +12,10 @@
             name="contactsClickListener"
             type="android.view.View.OnClickListener"/>
         <variable
-            name="dialerClickListener"
+            name="directoryClickListener"
             type="android.view.View.OnClickListener"/>
         <variable
-            name="directoryClickListener"
+            name="dialerClickListener"
             type="android.view.View.OnClickListener"/>
         <variable
             name="chatClickListener"
@@ -25,6 +25,7 @@
             type="org.linphone.activities.main.viewmodels.TabsViewModel" />
     </data>
 
+    <!-- dms: 5 tabs (directory added), same anchors as portrait tabs_fragment.xml -->
     <androidx.constraintlayout.motion.widget.MotionLayout
         android:id="@+id/motion_layout"
         android:layout_width="@dimen/main_activity_tabs_fragment_size"
@@ -36,30 +37,36 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            layout_constraintGuide_percent="@{viewModel.leftAnchor, default=0.25}" />
+            layout_constraintGuide_percent="@{viewModel.leftAnchor, default=0.2}" />
 
         <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guidelineMiddle"
+            android:id="@+id/guidelineMiddleTop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            layout_constraintGuide_percent="@{viewModel.middleAnchor, default=0.5}" />
+            layout_constraintGuide_percent="@{viewModel.middleLeftAnchor, default=0.4}" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guidelineMiddleBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            layout_constraintGuide_percent="@{viewModel.middleRightAnchor, default=0.6}" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineBottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            layout_constraintGuide_percent="@{viewModel.rightAnchor, default=0.75}" />
+            layout_constraintGuide_percent="@{viewModel.rightAnchor, default=0.8}" />
 
         <ImageView
             android:id="@+id/history"
             android:onClick="@{historyClickListener}"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_centerInParent="true"
             android:contentDescription="@string/content_description_menu_history"
-            android:padding="15dp"
+            android:padding="10dp"
             android:background="@drawable/footer_button"
             android:src="@drawable/footer_history"
             app:layout_constraintTop_toTopOf="parent"
@@ -86,15 +93,34 @@
             android:background="@drawable/footer_button"
             android:onClick="@{contactsClickListener}"
             app:layout_constraintTop_toTopOf="@id/guidelineTop"
-            app:layout_constraintBottom_toTopOf="@id/guidelineMiddle">
+            app:layout_constraintBottom_toTopOf="@id/guidelineMiddleTop">
 
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_centerInParent="true"
                 android:contentDescription="@string/content_description_menu_contacts"
-                android:padding="15dp"
+                android:padding="10dp"
                 android:src="@drawable/footer_contacts" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/directory"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@drawable/footer_button"
+            android:onClick="@{directoryClickListener}"
+            app:layout_constraintTop_toTopOf="@id/guidelineMiddleTop"
+            app:layout_constraintBottom_toTopOf="@id/guidelineMiddleBottom">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:contentDescription="@string/content_description_directory"
+                android:padding="10dp"
+                android:src="@drawable/footer_directory" />
 
         </RelativeLayout>
 
@@ -104,15 +130,15 @@
             android:layout_height="0dp"
             android:background="@drawable/footer_button"
             android:onClick="@{dialerClickListener}"
-            app:layout_constraintTop_toTopOf="@id/guidelineMiddle"
+            app:layout_constraintTop_toTopOf="@id/guidelineMiddleBottom"
             app:layout_constraintBottom_toTopOf="@id/guidelineBottom">
 
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_centerInParent="true"
                 android:contentDescription="@string/content_description_menu_dialer"
-                android:padding="15dp"
+                android:padding="10dp"
                 android:src="@drawable/footer_dialer" />
 
         </RelativeLayout>
@@ -122,9 +148,8 @@
             android:onClick="@{chatClickListener}"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_centerInParent="true"
             android:contentDescription="@string/content_description_menu_chat"
-            android:padding="15dp"
+            android:padding="10dp"
             android:src="@drawable/footer_chat"
             android:background="@drawable/footer_button"
             app:layout_constraintTop_toTopOf="@id/guidelineBottom"
