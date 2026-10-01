@@ -136,6 +136,8 @@ private class ContactDiffCallback : DiffUtil.ItemCallback<ContactViewModel>() {
         oldItem: ContactViewModel,
         newItem: ContactViewModel
     ): Boolean {
-        return true
+        // dms: rebind when the list is rebuilt with new view models, otherwise the cell stays bound to the
+        // old (destroyed) one and presence updates, which go to the new one, are never shown
+        return oldItem === newItem
     }
 }

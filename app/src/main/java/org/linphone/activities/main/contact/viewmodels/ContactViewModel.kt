@@ -34,6 +34,7 @@ import org.linphone.activities.main.contact.data.ContactNumberOrAddressData
 import org.linphone.activities.main.viewmodels.MessageNotifierViewModel
 import org.linphone.contact.ContactDataInterface
 import org.linphone.contact.ContactsUpdatedListenerStub
+import org.linphone.contact.firstActivity
 import org.linphone.contact.hasPresence
 import org.linphone.core.*
 import org.linphone.core.tools.Log
@@ -203,9 +204,9 @@ class ContactViewModel(friend: Friend, async: Boolean = false) : MessageNotifier
         contactPresenceIconRes.postValue(resIcon)
     }
 
-    fun getPresenceIconRes(): MutableLiveData<Int> {
-        return contactPresenceIconRes
-    }
+    // dms: property (not a method) so that data binding observes it and the cell updates on presence changes
+    val presenceIconRes: MutableLiveData<Int>
+        get() = contactPresenceIconRes
 
     private fun getPresenceIconResAsInt(): Int {
 
@@ -214,7 +215,7 @@ class ContactViewModel(friend: Friend, async: Boolean = false) : MessageNotifier
         val pm = friend.presenceModel ?: return R.drawable.contact_presence_notabuddy
 
         val basicStatus = pm.basicStatus
-        val activity = pm.activity
+        val activity = pm.firstActivity() // dms: see firstActivity()
 
         if (basicStatus == PresenceBasicStatus.Open) {
             if (activity == null) {

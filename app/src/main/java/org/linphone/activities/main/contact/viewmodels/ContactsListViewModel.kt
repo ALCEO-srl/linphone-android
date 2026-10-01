@@ -198,33 +198,28 @@ class ContactsListViewModel : ViewModel() {
         Log.i("[Contacts] Processing ${results.size} results")
         contactsList.value.orEmpty().forEach(ContactViewModel::destroy)
 
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val list = arrayListOf<ContactViewModel>()
+        // dms: Friend/presence objects must be accessed on the core (main) thread,
+        // linphone-sdk is not thread-safe (native crashes when built on Dispatchers.IO)
+        val list = arrayListOf<ContactViewModel>()
 
-                for (result in results) {
-                    val friend = result.friend
+        for (result in results) {
+            val friend = result.friend
 
-                    Log.w("[Contacts] SearchResult " + friend?.name)
+            Log.w("[Contacts] SearchResult " + friend?.name)
 
-                    val viewModel = if (friend != null) {
-                        ContactViewModel(friend, true)
-                    } else {
-                        Log.w("[Contacts] SearchResult [$result] has no Friend!")
-                        val fakeFriend = coreContext.contactsManager.createFriendFromSearchResult(result)
-                        ContactViewModel(fakeFriend, true)
-                    }
-
-                    list.add(viewModel)
-                }
-
-                contactsList.postValue(list)
+            val viewModel = if (friend != null) {
+                ContactViewModel(friend)
+            } else {
+                Log.w("[Contacts] SearchResult [$result] has no Friend!")
+                val fakeFriend = coreContext.contactsManager.createFriendFromSearchResult(result)
+                ContactViewModel(fakeFriend)
             }
 
-            withContext(Dispatchers.Main) {
-                Log.i("[Contacts] Processed ${results.size} results")
-            }
+            list.add(viewModel)
         }
+
+        contactsList.value = list
+        Log.i("[Contacts] Processed ${results.size} results")
     }
 
     fun deleteContact(friend: Friend) {

@@ -66,6 +66,7 @@ import org.linphone.compatibility.Compatibility
 import org.linphone.compatibility.PhoneStateInterface
 // import org.linphone.contact.ContactLoader // removed: native contacts disabled
 import org.linphone.contact.ContactsManager
+import org.linphone.contact.firstActivity
 import org.linphone.contact.getContactForPhoneNumberOrAddress
 import org.linphone.core.tools.Log
 import org.linphone.mediastream.Version
@@ -200,7 +201,7 @@ class CoreContext(
         // dms BEGIN **********
 
         private fun isPresenceModelActivitySet(core: Core): Boolean {
-            return (core?.presenceModel?.activity != null)
+            return (core?.presenceModel?.firstActivity() != null)
         }
 
         private fun changeStatusToOnline(core: Core) {
@@ -213,9 +214,9 @@ class CoreContext(
         private fun changeStatusToOnThePhone(core: Core) {
             if (core == null) return
 
-            if (core?.presenceModel?.activity != null) {
-                if (core?.presenceModel?.activity?.type != PresenceActivity.Type.OnThePhone) {
-                    core?.presenceModel?.activity?.type = PresenceActivity.Type.OnThePhone
+            if (core?.presenceModel?.firstActivity() != null) {
+                if (core?.presenceModel?.firstActivity()?.type != PresenceActivity.Type.OnThePhone) {
+                    core?.presenceModel?.firstActivity()?.type = PresenceActivity.Type.OnThePhone
                 }
             } else {
                 val model: PresenceModel =

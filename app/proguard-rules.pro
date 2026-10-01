@@ -52,3 +52,16 @@
 -keep class org.linphone.bcsws.CallReportResponse { *; }
 -keep class org.linphone.bcsws.RemoteParty { *; }
 -keep class  org.linphone.bcsws.** { *; }
+
+# Retrofit suspend functions with R8 full mode (AGP 8+), BcsWs calls break without these
+-keep,allowobfuscation,allowshrinking interface retrofit2.Call
+-keep,allowobfuscation,allowshrinking class retrofit2.Response
+-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+-if interface * { @retrofit2.http.* <methods>; }
+-keep,allowobfuscation interface <1>
+-if interface * { @retrofit2.http.* <methods>; }
+-keep,allowobfuscation interface * extends <1>
+
+# Gson generic types with R8 full mode
+-keep,allowobfuscation,allowshrinking class com.google.gson.reflect.TypeToken
+-keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken

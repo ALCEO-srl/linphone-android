@@ -337,6 +337,17 @@ fun Friend.getContactForPhoneNumberOrAddress(value: String): String? {
     return null
 }
 
+// dms: PresenceModel.getActivity()/getNthActivity() are tagged @tobefreed in the SDK but don't add a ref,
+// so their Java wrapper unrefs an activity it never reffed when finalized (activity freed twice -> crash).
+// Go through the person instead, whose getters take a proper ref.
+fun PresenceModel.firstActivity(): PresenceActivity? {
+    for (i in 0 until nbPersons) {
+        val person = getNthPerson(i) ?: continue
+        if (person.nbActivities > 0) return person.getNthActivity(0)
+    }
+    return null
+}
+
 fun Friend.hasPresence(): Boolean {
     for (address in addresses) {
         val presenceModel = getPresenceModelForUriOrTel(address.asStringUriOnly())
