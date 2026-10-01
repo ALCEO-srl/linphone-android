@@ -216,6 +216,8 @@ class GenericLoginViewModel(private val accountCreator: AccountCreator) : ViewMo
                     account.params.serverAddress = address
                 }
                 account.params.isPublishEnabled = true
+                account.params.publishExpires = 600
+
                 account.params.transport = TransportType.Tls
                 for (payloadType in coreContext.core.audioPayloadTypes) {
                     if (payloadType.isVbr) {

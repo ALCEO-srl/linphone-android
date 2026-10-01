@@ -150,6 +150,7 @@ class AccountSettingsViewModel(val account: Account) : GenericSettingsViewModel(
             } else {
                 Log.w("[Account Settings] Failed to find the matching auth info")
                 val params = account.params
+
                 val identity = params.identityAddress
                 if (identity != null && identity.username != null) {
                     val newAuthInfo = Factory.instance()
