@@ -41,7 +41,7 @@
                     android:contentDescription="@null" />
 
                 <ImageView
-                    android:visibility="@{data.hasLimeX3DHCapability ? View.VISIBLE : View.GONE, default=gone}"
+                    android:visibility="gone"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_alignParentTop="true"
@@ -82,7 +82,7 @@
             </LinearLayout>
 
             <ImageView
-                android:visibility="@{data.linphoneUser ? View.VISIBLE : View.INVISIBLE}"
+                android:visibility="gone"
                 android:id="@+id/linphone_user"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
