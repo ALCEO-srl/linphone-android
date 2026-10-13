@@ -46,6 +46,7 @@ import org.linphone.core.Call
 import org.linphone.core.tools.Log
 import org.linphone.databinding.VoipActivityBinding
 import org.linphone.mediastream.Version
+import org.linphone.notifications.NotificationsManager
 import org.linphone.utils.PermissionHelper
 
 class CallActivity : ProximitySensorActivity() {
@@ -180,6 +181,34 @@ class CallActivity : ProximitySensorActivity() {
         }
 
         checkPermissions()
+        answerCallFromNotificationIfRequested(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        answerCallFromNotificationIfRequested(intent)
+    }
+
+    // dms: the "Answer" action of the incoming call notification opens this activity (see
+    // NotificationsManager.getCallAnswerPendingIntent), so the call is answered with the app in foreground
+    private fun answerCallFromNotificationIfRequested(intent: Intent?) {
+        if (intent?.action != NotificationsManager.INTENT_ANSWER_CALL_NOTIF_ACTION) return
+        intent.action = null
+
+        val remoteSipAddress = intent.getStringExtra(NotificationsManager.INTENT_REMOTE_ADDRESS) ?: return
+        val core = coreContext.core
+        val remoteAddress = core.interpretUrl(remoteSipAddress, false)
+        val call = if (remoteAddress != null) core.getCallByRemoteAddress2(remoteAddress) else null
+        if (call == null) {
+            Log.e("[Call Activity] Couldn't find call to answer from remote address $remoteSipAddress")
+            return
+        }
+
+        if (call.state == Call.State.IncomingReceived || call.state == Call.State.IncomingEarlyMedia) {
+            Log.i("[Call Activity] Answering call from notification")
+            coreContext.answerCall(call)
+        }
     }
 
     override fun onUserLeaveHint() {
@@ -222,6 +251,8 @@ class CallActivity : ProximitySensorActivity() {
             return
         }
         coreContext.removeCallOverlay()
+        // dms: permissions may have been granted meanwhile (e.g. from the settings)
+        coreContext.notificationsManager.refreshForegroundServiceTypes()
 
         val currentCall = coreContext.core.currentCall
         when (currentCall?.state) {
@@ -294,9 +325,11 @@ class CallActivity : ProximitySensorActivity() {
                     Manifest.permission.RECORD_AUDIO -> if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.i("[Call Activity] RECORD_AUDIO permission has been granted")
                         callsViewModel.updateMicState()
+                        coreContext.notificationsManager.refreshForegroundServiceTypes() // dms
                     }
                     Manifest.permission.CAMERA -> if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.i("[Call Activity] CAMERA permission has been granted")
+                        coreContext.notificationsManager.refreshForegroundServiceTypes() // dms
                         coreContext.core.reloadVideoDevices()
                         controlsViewModel.toggleVideo()
                     }

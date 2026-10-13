@@ -224,13 +224,27 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
         grantResults: IntArray
     ) {
         if (requestCode == 0) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.i("[Dialer] READ_PHONE_STATE permission has been granted")
-                coreContext.initPhoneStateListener()
-                // If first permission has been granted, continue to ask for permissions,
-                // otherwise don't do it or it will loop indefinitely
-                checkPermissions()
+            // dms: result of the single startup request (see checkPermissions)
+            for (i in permissions.indices) {
+                val granted = i < grantResults.size && grantResults[i] == PackageManager.PERMISSION_GRANTED
+                when (permissions[i]) {
+                    Manifest.permission.READ_PHONE_STATE -> if (granted) {
+                        Log.i("[Dialer] READ_PHONE_STATE permission has been granted")
+                        coreContext.initPhoneStateListener()
+                    }
+                    Manifest.permission.RECORD_AUDIO -> if (!granted) {
+                        Log.w("[Dialer] RECORD_AUDIO permission has been denied, it will be asked again during calls")
+                    }
+                    Manifest.permission.POST_NOTIFICATIONS -> if (granted) {
+                        Log.i("[Dialer] POST_NOTIFICATIONS permission has been granted")
+                    } else {
+                        Log.w("[Dialer] POST_NOTIFICATIONS permission has been denied")
+                        showPostNotificationsDeniedDialog()
+                    }
+                }
             }
+            // Don't call checkPermissions() again here, or denied permissions would be asked in a loop
+            checkTelecomManagerPermissions()
         } else if (requestCode == 1) {
             var allGranted = true
             for (result in grantResults) {
@@ -249,30 +263,47 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
                 Log.i("[Dialer] POST_NOTIFICATIONS permission has been granted")
             } else {
                 Log.w("[Dialer] POST_NOTIFICATIONS permission has been denied")
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(R.string.perm_post_notifications_denied_title)
-                    .setMessage(R.string.perm_post_notifications_denied_message)
-                    .setPositiveButton(R.string.perm_post_notifications_open_settings) { _, _ ->
-                        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                            .setData(android.net.Uri.parse("package:${requireContext().packageName}"))
-                        startActivity(intent)
-                    }
-                    .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
-                    .show()
+                showPostNotificationsDeniedDialog()
             }
             checkTelecomManagerPermissions()
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    private fun showPostNotificationsDeniedDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.perm_post_notifications_denied_title)
+            .setMessage(R.string.perm_post_notifications_denied_message)
+            .setPositiveButton(R.string.perm_post_notifications_open_settings) { _, _ ->
+                val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    .setData(android.net.Uri.parse("package:${requireContext().packageName}"))
+                startActivity(intent)
+            }
+            .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
     private fun checkPermissions() {
+        // dms: ask at startup, in a single request, every permission needed by calls. Asked during the call,
+        // the microphone request was hidden behind the call screen when answering from the notification,
+        // and the call stayed without microphone in background.
+        val missing = arrayListOf<String>()
         if (!PermissionHelper.get().hasReadPhoneStatePermission()) {
-            Log.i("[Dialer] Asking for READ_PHONE_STATE permission")
-            requestPermissions(arrayOf(Manifest.permission.READ_PHONE_STATE), 0)
-        } else if (!PermissionHelper.get().hasPostNotificationsPermission()) {
-            // Don't check the following the previous permission is being asked
-            Log.i("[Dialer] Asking for POST_NOTIFICATIONS permission")
-            Compatibility.requestPostNotificationsPermission(this, 2)
+            missing.add(Manifest.permission.READ_PHONE_STATE)
+        }
+        if (!PermissionHelper.get().hasRecordAudioPermission()) {
+            missing.add(Manifest.permission.RECORD_AUDIO)
+        }
+        if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12) && !PermissionHelper.get().hasBluetoothConnectPermission()) {
+            missing.add(Compatibility.BLUETOOTH_CONNECT)
+        }
+        if (Version.sdkAboveOrEqual(Version.API33_ANDROID_13_TIRAMISU) && !PermissionHelper.get().hasPostNotificationsPermission()) {
+            missing.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        if (missing.isNotEmpty()) {
+            Log.i("[Dialer] Asking for permissions $missing")
+            requestPermissions(missing.toTypedArray(), 0)
         } else if (Version.sdkAboveOrEqual(Version.API26_O_80)) {
             // Don't check the following the previous permissions are being asked
             checkTelecomManagerPermissions()

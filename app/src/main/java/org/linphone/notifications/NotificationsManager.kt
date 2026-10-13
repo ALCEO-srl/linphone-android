@@ -325,6 +325,17 @@ class NotificationsManager(private val context: Context) {
         }
     }
 
+    // dms: called when the microphone/camera permission is granted after the service was started
+    // (e.g. from the call screen): calling startForeground again updates the service types, otherwise the
+    // service keeps the types computed without the permission and the microphone is silenced in background
+    fun refreshForegroundServiceTypes() {
+        val coreService = service ?: return
+        if (currentForegroundServiceNotificationId == 0) return
+        val notif = currentCallNotification ?: serviceNotification ?: return
+        Log.i("[Notifications Manager] Refreshing foreground service types")
+        Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, notif)
+    }
+
     fun startCallForeground(coreService: CoreService) {
         service = coreService
         Log.w("#\$#\$#\$#\$ [startCallForeground] currentFgNotifId=$currentForegroundServiceNotificationId callsNb=${coreContext.core.callsNb}")
@@ -942,12 +953,15 @@ class NotificationsManager(private val context: Context) {
     /* Notifications actions */
 
     fun getCallAnswerPendingIntent(notifiable: Notifiable): PendingIntent {
-        val answerIntent = Intent(context, NotificationBroadcastReceiver::class.java)
+        // dms: open the call screen and answer from there instead of a broadcast: answered in background,
+        // Android doesn't grant the microphone to the call service and the other party can't hear us
+        val answerIntent = Intent(context, CallActivity::class.java)
         answerIntent.action = INTENT_ANSWER_CALL_NOTIF_ACTION
+        answerIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         answerIntent.putExtra(INTENT_NOTIF_ID, notifiable.notificationId)
         answerIntent.putExtra(INTENT_REMOTE_ADDRESS, notifiable.remoteAddress)
 
-        return PendingIntent.getBroadcast(
+        return PendingIntent.getActivity(
             context,
             notifiable.notificationId,
             answerIntent,
