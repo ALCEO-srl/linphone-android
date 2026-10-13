@@ -121,6 +121,7 @@ class MainActivity : GenericActivity(), SnackBarActivity, NavController.OnDestin
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, maxOf(systemBars.bottom, ime.bottom))
+            setSystemBarsBackground(view, systemBars.top)
             insets
         }
 

@@ -22,12 +22,20 @@ package org.linphone.activities
 import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.Display
+import android.view.Gravity
+import android.view.View
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.ActivityNavigator
 import androidx.window.layout.FoldingFeature
@@ -52,7 +60,11 @@ abstract class GenericActivity : AppCompatActivity() {
 
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        // dms: always light status / navigation bar icons, the strips behind them are dark (see setSystemBarsBackground)
+        enableEdgeToEdge(
+            SystemBarStyle.dark(Color.TRANSPARENT),
+            SystemBarStyle.dark(Color.TRANSPARENT)
+        )
         super.onCreate(savedInstanceState)
 
         Log.i("[Generic Activity] Ensuring Core exists")
@@ -108,6 +120,16 @@ abstract class GenericActivity : AppCompatActivity() {
     override fun finish() {
         super.finish()
         ActivityNavigator.applyPopAnimationsToPendingTransition(this)
+    }
+
+    // dms: edge-to-edge draws the content behind the system bars, color the padding strips as before target 35:
+    // status bar in primary dark color, the others black
+    protected fun setSystemBarsBackground(view: View, statusBarHeight: Int) {
+        val statusBar = ColorDrawable(ContextCompat.getColor(this, R.color.primary_dark_color))
+        val background = LayerDrawable(arrayOf<Drawable>(ColorDrawable(Color.BLACK), statusBar))
+        background.setLayerGravity(1, Gravity.TOP)
+        background.setLayerHeight(1, statusBarHeight)
+        view.background = background
     }
 
     fun isTablet(): Boolean {
