@@ -212,18 +212,29 @@ class Api31Compatibility {
         }
 
         fun startForegroundService(service: Service, notifId: Int, notif: Notification?) {
+            // Include MICROPHONE alongside PHONE_CALL so Android 15+ doesn't suspend
+            // audio capture when the screen turns off or the app goes to background.
+            // dms: MICROPHONE / CAMERA types only if the matching permission is granted, otherwise
+            // Android rejects the whole startForeground (no FGS -> mic silenced in background)
+            var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+            if (Compatibility.hasPermission(service, Manifest.permission.RECORD_AUDIO)) {
+                types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+            }
+            if (Compatibility.hasPermission(service, Manifest.permission.CAMERA)) {
+                types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+            }
+
             try {
-                // Include MICROPHONE alongside PHONE_CALL so Android 15+ doesn't suspend
-                // audio capture when the screen turns off or the app goes to background.
-                service.startForeground(
-                    notifId,
-                    notif!!,
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
-                )
+                service.startForeground(notifId, notif!!, types)
             } catch (fssnae: ForegroundServiceStartNotAllowedException) {
                 Log.e("[Api31 Compatibility] Can't start service as foreground! $fssnae")
             } catch (se: SecurityException) {
-                Log.e("[Api31 Compatibility] Security exception starting foreground service! $se")
+                Log.e("[Api31 Compatibility] Security exception starting foreground service with types [$types], retrying with phone call only: $se")
+                try {
+                    service.startForeground(notifId, notif!!, ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL)
+                } catch (e: Exception) {
+                    Log.e("[Api31 Compatibility] Can't start service as foreground with phone call type either! $e")
+                }
             }
         }
 
