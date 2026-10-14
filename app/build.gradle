@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
-    id 'kotlin-android'
-    id 'kotlin-kapt'
+    // dms: AGP 9 has Kotlin built in, kapt (data binding) comes from the AGP legacy-kapt plugin
+    id 'com.android.legacy-kapt'
 }
 
 def appVersionName = "5.2.5"
@@ -23,7 +23,7 @@ if (crashlyticsEnabled) {
     apply plugin: 'com.google.firebase.crashlytics'
 }
 
-def gitBranch = new ByteArrayOutputStream()
+def gitBranch = ""
 task getGitVersion() {
     def gitVersion = appVersionName
     def gitVersionStream = new ByteArrayOutputStream()
@@ -43,10 +43,10 @@ task getGitVersion() {
             executable "git" args "rev-parse", "--short", "HEAD"
             standardOutput = gitCommitHash
         }*/
-        exec {
-            executable "git" args "name-rev", "--name-only", "HEAD"
-            standardOutput = gitBranch
-        }
+        // dms: Project.exec no longer exists in Gradle 9
+        gitBranch = providers.exec {
+            commandLine "git", "name-rev", "--name-only", "HEAD"
+        }.standardOutput.asText.get()
 /*
         if (gitCommitsCount.toString().toInteger() == 0) {
             gitVersion = gitVersionStream.toString().trim()
@@ -95,34 +95,8 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
-    applicationVariants.all { variant ->
-        variant.outputs.all {
-            outputFileName = getPackageName() + "-${variant.buildType.name}-${project.version}.apk"
-        }
-
-        var enableFirebaseService = "false"
-        if (firebaseEnabled) {
-            enableFirebaseService = "true"
-        }
-        // See https://developer.android.com/studio/releases/gradle-plugin#3-6-0-behavior for why extractNativeLibs is set to true in debug flavor
-        if (variant.buildType.name == "release" || variant.buildType.name == "releaseWithCrashlytics") {
-            variant.getMergedFlavor().manifestPlaceholders = [linphone_address_mime_type: "vnd.android.cursor.item/vnd." + getPackageName() + ".provider.sip_address",
-                                                              linphone_file_provider: getPackageName() + ".fileprovider",
-                                                              appLabel: "@string/app_name",
-                                                              firebaseServiceEnabled: enableFirebaseService,
-                                                              extractNativeLibs: "false"]
-        } else {
-            variant.getMergedFlavor().manifestPlaceholders = [linphone_address_mime_type: "vnd.android.cursor.item/vnd." + getPackageName() + ".provider.sip_address",
-                                                              linphone_file_provider: getPackageName() + ".debug.fileprovider",
-                                                              appLabel: "@string/app_name_debug",
-                                                              firebaseServiceEnabled: enableFirebaseService,
-                                                              extractNativeLibs: "true"]
-        }
-    }
+    // dms: AGP 9 removed applicationVariants, the manifest placeholders are now set in each build type
+    // (releaseWithCrashlytics inherits them from release); APK files keep the default name
 
     def keystorePropertiesFile = rootProject.file("keystore.properties")
     def keystoreProperties = new Properties()
@@ -140,10 +114,15 @@ android {
     buildTypes {
         release {
             minifyEnabled true
-            signingConfig signingConfigs.release
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig = signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
-            resValue "string", "linphone_app_branch", gitBranch.toString().trim()
+            manifestPlaceholders = [linphone_address_mime_type: "vnd.android.cursor.item/vnd." + getPackageName() + ".provider.sip_address",
+                                    linphone_file_provider: getPackageName() + ".fileprovider",
+                                    appLabel: "@string/app_name",
+                                    firebaseServiceEnabled: firebaseEnabled.toString()]
+
+            resValue "string", "linphone_app_branch", gitBranch.trim()
             resValue "string", "sync_account_type", getPackageName() + ".sync"
             resValue "string", "file_provider", getPackageName() + ".fileprovider"
             resValue "string", "linphone_address_mime_type", "vnd.android.cursor.item/vnd." + getPackageName() + ".provider.sip_address"
@@ -162,8 +141,8 @@ android {
 
             if (crashlyticsEnabled) {
                 firebaseCrashlytics {
-                    nativeSymbolUploadEnabled true
-                    unstrippedNativeLibsDir file(LinphoneSdkBuildDir + '/libs-debug/').toString()
+                    nativeSymbolUploadEnabled = true
+                    unstrippedNativeLibsDir = file(LinphoneSdkBuildDir + '/libs-debug/').toString()
                 }
             }
         }
@@ -173,7 +152,12 @@ android {
             debuggable true
             jniDebuggable true
 
-            resValue "string", "linphone_app_branch", gitBranch.toString().trim()
+            manifestPlaceholders = [linphone_address_mime_type: "vnd.android.cursor.item/vnd." + getPackageName() + ".provider.sip_address",
+                                    linphone_file_provider: getPackageName() + ".debug.fileprovider",
+                                    appLabel: "@string/app_name_debug",
+                                    firebaseServiceEnabled: firebaseEnabled.toString()]
+
+            resValue "string", "linphone_app_branch", gitBranch.trim()
             resValue "string", "sync_account_type", getPackageName() + ".sync"
             resValue "string", "file_provider", getPackageName() + ".debug.fileprovider"
             resValue "string", "linphone_address_mime_type", "vnd.android.cursor.item/vnd." + getPackageName() + ".provider.sip_address"
@@ -185,8 +169,8 @@ android {
 
             if (crashlyticsEnabled) {
                 firebaseCrashlytics {
-                    nativeSymbolUploadEnabled true
-                    unstrippedNativeLibsDir file(LinphoneSdkBuildDir + '/libs-debug/').toString()
+                    nativeSymbolUploadEnabled = true
+                    unstrippedNativeLibsDir = file(LinphoneSdkBuildDir + '/libs-debug/').toString()
                 }
             }
         }
@@ -195,9 +179,24 @@ android {
     buildFeatures {
         dataBinding = true
         buildConfig = true
+        resValues = true
     }
 
-    namespace 'org.linphone'
+    namespace = 'org.linphone'
+}
+
+androidComponents {
+    // See https://developer.android.com/studio/releases/gradle-plugin#3-6-0-behavior for why native libs are extracted in debug
+    // dms: was android:extractNativeLibs="true" in the manifest, no longer allowed by AGP 9
+    onVariants(selector().withBuildType("debug")) { variant ->
+        variant.packaging.jniLibs.useLegacyPackaging.set(true)
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+    }
 }
 
 dependencies {

@@ -2,12 +2,12 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
-        maven { url "https://plugins.gradle.org/m2/" }
-        maven { url "https://www.jitpack.io" } // for com.github.chrisbanes:PhotoView
+        maven { url = "https://plugins.gradle.org/m2/" }
+        maven { url = "https://www.jitpack.io" } // for com.github.chrisbanes:PhotoView
 
         maven {
-            name "local linphone-sdk maven repository"
-            url file(LinphoneSdkBuildDir + '/maven_repository/')
+            name = "local linphone-sdk maven repository"
+            url = file(LinphoneSdkBuildDir + '/maven_repository/')
             content {
                 includeGroup "org.linphone"
             }

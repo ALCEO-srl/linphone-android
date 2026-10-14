@@ -1,3 +1,7 @@
+# dms: AGP 9 no longer accepts proguard-android.txt (which had -dontoptimize), keep R8 optimizations off
+# as with AGP 8 until the app has been tested with them
+-dontoptimize
+
 # If your project uses WebView with JS, uncomment the following
 # and specify the fully qualified class name to the JavaScript interface
 # class:
