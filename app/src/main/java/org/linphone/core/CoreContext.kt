@@ -467,6 +467,13 @@ class CoreContext(
 
         configureCore()
 
+        // dms: Android 17 mutes the ringtone played by the SDK from the app in background: let the system play
+        // it through the incoming call notification channel. Callkit mode only stops liblinphone's own ringtone
+        // (it isn't used by Android sound cards), native ringing off stops the SDK AudioHelper ringtone.
+        val ringtoneByNotification = Compatibility.isRingtonePlayedByNotification()
+        core.isNativeRingingEnabled = !ringtoneByNotification
+        core.isCallkitEnabled = ringtoneByNotification
+
         core.start()
         _lifecycleRegistry.currentState = Lifecycle.State.STARTED
 

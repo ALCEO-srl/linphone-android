@@ -51,7 +51,8 @@ class Api31Compatibility {
             call: Call,
             notifiable: Notifiable,
             pendingIntent: PendingIntent,
-            notificationsManager: NotificationsManager
+            notificationsManager: NotificationsManager,
+            channelId: String
         ): Notification {
             val remoteContact = call.remoteContact
             val conferenceAddress = if (remoteContact != null) coreContext.core.interpretUrl(remoteContact, false) else null
@@ -92,7 +93,7 @@ class Api31Compatibility {
             val isVideoAutomaticallyAccepted = call.core.videoActivationPolicy.automaticallyAccept
             val isVideo = isVideoEnabledInRemoteParams && isVideoAutomaticallyAccepted
 
-            val builder = Notification.Builder(context, context.getString(R.string.notification_channel_incoming_call_id)).apply {
+            val builder = Notification.Builder(context, channelId).apply {
                 try {
                     style = Notification.CallStyle.forIncomingCall(
                         caller,
@@ -101,7 +102,7 @@ class Api31Compatibility {
                     ).setIsVideo(isVideo)
                 } catch (iae: IllegalArgumentException) {
                     Log.e("[Api31 Compatibility] Can't use notification call style: $iae, using API 26 notification instead")
-                    return Api26Compatibility.createIncomingCallNotification(context, call, notifiable, pendingIntent, notificationsManager)
+                    return Api26Compatibility.createIncomingCallNotification(context, call, notifiable, pendingIntent, notificationsManager, channelId)
                 }
                 setSmallIcon(R.drawable.topbar_call_notification)
                 setCategory(Notification.CATEGORY_CALL)

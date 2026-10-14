@@ -724,6 +724,8 @@
     <string name="notification_channel_service_id" translatable="false">linphone_notification_service_id</string>
     <string name="notification_channel_missed_call_id" translatable="false">linphone_notification_missed_call_id</string>
     <string name="notification_channel_incoming_call_id" translatable="false">linphone_notification_call_id</string>
+    <string name="notification_channel_incoming_call_ringing_id" translatable="false">linphone_notification_call_ringing_id</string>
+    <string name="notification_channel_incoming_call_silent_id" translatable="false">linphone_notification_call_silent_id</string>
     <string name="notification_channel_chat_id" translatable="false">linphone_notification_chat_id</string>
     <string name="notification_channel_service_name">&appName; service notification</string>
     <string name="notification_channel_missed_call_name">&appName; missed calls notifications</string>

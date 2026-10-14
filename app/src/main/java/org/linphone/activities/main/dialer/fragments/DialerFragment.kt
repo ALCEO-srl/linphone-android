@@ -297,6 +297,12 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
         if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12) && !PermissionHelper.get().hasBluetoothConnectPermission()) {
             missing.add(Compatibility.BLUETOOTH_CONNECT)
         }
+        // dms: Android 17, local network access (calls with peers in the same LAN, otherwise they go through TURN)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
+            !Compatibility.hasPermission(requireContext(), Manifest.permission.ACCESS_LOCAL_NETWORK)
+        ) {
+            missing.add(Manifest.permission.ACCESS_LOCAL_NETWORK)
+        }
         if (Version.sdkAboveOrEqual(Version.API33_ANDROID_13_TIRAMISU) && !PermissionHelper.get().hasPostNotificationsPermission()) {
             missing.add(Manifest.permission.POST_NOTIFICATIONS)
         }

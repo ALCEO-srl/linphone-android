@@ -4,8 +4,8 @@ plugins {
     id 'com.android.legacy-kapt'
 }
 
-def appVersionName = "5.2.5"
-def appVersionCode = 50013
+def appVersionName = "5.2.6"
+def appVersionCode = 50014
 
 static def getPackageName() {
     return "com.alceo.bcsphone"
@@ -80,11 +80,11 @@ project.tasks['preBuild'].dependsOn 'getGitVersion'
 project.tasks['preBuild'].dependsOn 'linphoneSdkSource'
 
 android {
-    compileSdk 36
+    compileSdk 37
 
     defaultConfig {
         minSdkVersion 26
-        targetSdk 36
+        targetSdk 37
         versionCode appVersionCode
         versionName "${project.version}"
         applicationId getPackageName()

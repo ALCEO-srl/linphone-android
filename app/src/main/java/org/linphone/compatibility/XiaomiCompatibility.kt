@@ -46,7 +46,8 @@ class XiaomiCompatibility {
             call: Call,
             notifiable: Notifiable,
             pendingIntent: PendingIntent,
-            notificationsManager: NotificationsManager
+            notificationsManager: NotificationsManager,
+            channelId: String
         ): Notification {
             val contact: Friend?
             val roundPicture: Bitmap?
@@ -74,7 +75,7 @@ class XiaomiCompatibility {
                 Log.i("[Notifications Manager] Displaying incoming group call notification with subject $displayName and remote contact address $remoteContact")
             }
 
-            val builder = NotificationCompat.Builder(context, context.getString(R.string.notification_channel_incoming_call_id))
+            val builder = NotificationCompat.Builder(context, channelId)
                 .addPerson(notificationsManager.getPerson(contact, displayName, roundPicture))
                 .setSmallIcon(R.drawable.topbar_call_notification)
                 .setLargeIcon(roundPicture ?: BitmapFactory.decodeResource(context.resources, R.drawable.voip_single_contact_avatar_alt))

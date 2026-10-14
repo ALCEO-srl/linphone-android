@@ -28,6 +28,7 @@ import android.telecom.DisconnectCause
 import android.telecom.StatusHints
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.R
+import org.linphone.compatibility.Compatibility
 import org.linphone.core.Call
 import org.linphone.core.tools.Log
 import org.linphone.utils.AudioRouteUtils
@@ -130,6 +131,20 @@ class NativeCallWrapper(var callId: String) : Connection() {
     override fun onSilence() {
         Log.i("[Connection] Call with id: $callId asked to be silenced")
         coreContext.core.stopRinging()
+        if (Compatibility.isRingtonePlayedByNotification()) {
+            val call = getCall() ?: return
+            coreContext.notificationsManager.refreshIncomingCallNotification(call, false)
+        }
+    }
+
+    // dms: Telecom asks the self-managed app to show its incoming call UI and ring: on Android 17+ the ringtone is
+    // the incoming call notification sound, post it again now (its first sound was stopped by Telecom)
+    override fun onShowIncomingCallUi() {
+        Log.i("[Connection] Telecom asks to show the incoming call UI for call with id: $callId")
+        if (Compatibility.isRingtonePlayedByNotification()) {
+            val call = getCall() ?: return
+            coreContext.notificationsManager.refreshIncomingCallNotification(call, true)
+        }
     }
 
     fun stateAsString(): String {

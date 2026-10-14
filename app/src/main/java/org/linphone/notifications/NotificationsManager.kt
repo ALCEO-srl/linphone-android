@@ -47,6 +47,7 @@ import org.linphone.contact.getPerson
 import org.linphone.contact.getThumbnailUri
 import org.linphone.core.*
 import org.linphone.core.tools.Log
+import org.linphone.telecom.TelecomHelper
 import org.linphone.utils.*
 
 class Notifiable(val notificationId: Int) {
@@ -332,6 +333,16 @@ class NotificationsManager(private val context: Context) {
         val coreService = service ?: return
         if (currentForegroundServiceNotificationId == 0) return
         val notif = currentCallNotification ?: serviceNotification ?: return
+        // dms: not while a call is ringing: posting the ringing notification again (startForeground) makes the
+        // system mute its ringtone on Android 17 ("recently noisy"). The microphone is only needed once answered,
+        // and CallActivity refreshes the types again when resumed after the answer.
+        val ringing = coreContext.core.calls.any {
+            it.state == Call.State.IncomingReceived || it.state == Call.State.IncomingEarlyMedia
+        }
+        if (ringing) {
+            Log.i("[Notifications Manager] Call is ringing, not refreshing foreground service types yet")
+            return
+        }
         Log.i("[Notifications Manager] Refreshing foreground service types")
         Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, notif)
     }
@@ -550,23 +561,43 @@ class NotificationsManager(private val context: Context) {
             Log.e("[Notifications Manager] Failed to get android.provider.Settings.Secure.getInt(lock_screen_show_notifications): $e")
         }
 
-        val incomingCallNotificationIntent = Intent(context, CallActivity::class.java)
-        incomingCallNotificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION or Intent.FLAG_FROM_BACKGROUND)
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            0,
-            incomingCallNotificationIntent,
-            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = Compatibility.createIncomingCallNotification(context, call, notifiable, pendingIntent, this)
-        Log.i("[Notifications Manager] Notifying incoming call notification [${notifiable.notificationId}]")
+        // dms: with Telecom, on Android 17+ the notification only rings when Telecom asks for it (onShowIncomingCallUi)
+        val ring = !(Compatibility.isRingtonePlayedByNotification() && TelecomHelper.exists())
+        val notification = Compatibility.createIncomingCallNotification(context, call, notifiable, getIncomingCallPendingIntent(), this, ring)
+        Log.i("[Notifications Manager] Notifying incoming call notification [${notifiable.notificationId}], ring=$ring")
         notify(notifiable.notificationId, notification)
 
         if (useAsForeground) {
             Log.i("[Notifications Manager] Notifying incoming call notification for foreground service [${notifiable.notificationId}]")
             startForeground(notifiable.notificationId, notification)
         }
+    }
+
+    // dms: Android 17+, the ringtone is the sound of the incoming call notification (see Api37Compatibility).
+    // Telecom stops it when the self-managed call starts ringing, so it is posted again when Telecom asks to show
+    // the incoming call UI (ring = true), and without sound when Telecom asks to silence the call (ring = false)
+    fun refreshIncomingCallNotification(call: Call, ring: Boolean) {
+        val notifiable = getNotifiableForCall(call)
+        val notification = Compatibility.createIncomingCallNotification(context, call, notifiable, getIncomingCallPendingIntent(), this, ring)
+        Log.i("[Notifications Manager] Refreshing incoming call notification [${notifiable.notificationId}], ring=$ring")
+        notify(notifiable.notificationId, notification)
+        if (currentForegroundServiceNotificationId == notifiable.notificationId) {
+            currentCallNotification = notification
+        }
+    }
+
+    private fun getIncomingCallPendingIntent(): PendingIntent {
+        val incomingCallNotificationIntent = Intent(context, CallActivity::class.java)
+        incomingCallNotificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION or Intent.FLAG_FROM_BACKGROUND)
+        // dms: UPDATE_CURRENT, not CANCEL_CURRENT: when the incoming call notification is posted again (Android 17,
+        // see refreshIncomingCallNotification) the full screen intent of the first post must stay valid, otherwise
+        // the call screen isn't shown on the lock screen
+        return PendingIntent.getActivity(
+            context,
+            0,
+            incomingCallNotificationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 
     private fun displayMissedCallNotification(remoteAddress: Address) {
@@ -622,7 +653,7 @@ class NotificationsManager(private val context: Context) {
         val channelToUse = when (val serviceChannelImportance = Compatibility.getChannelImportance(notificationManager, serviceChannel)) {
             NotificationManagerCompat.IMPORTANCE_NONE -> {
                 Log.w("[Notifications Manager] Service channel is disabled, using incoming call channel instead!")
-                context.getString(R.string.notification_channel_incoming_call_id)
+                Compatibility.getIncomingCallChannelId(context)
             }
             NotificationManagerCompat.IMPORTANCE_LOW -> {
                 // Expected, nothing to do

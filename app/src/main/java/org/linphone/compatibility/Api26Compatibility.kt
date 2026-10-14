@@ -159,7 +159,8 @@ class Api26Compatibility {
             call: Call,
             notifiable: Notifiable,
             pendingIntent: PendingIntent,
-            notificationsManager: NotificationsManager
+            notificationsManager: NotificationsManager,
+            channelId: String
         ): Notification {
             val contact: Friend?
             val roundPicture: Bitmap?
@@ -196,7 +197,7 @@ class Api26Compatibility {
                 notificationLayoutHeadsUp.setImageViewBitmap(R.id.caller_picture, roundPicture)
             }
 
-            val builder = NotificationCompat.Builder(context, context.getString(R.string.notification_channel_incoming_call_id))
+            val builder = NotificationCompat.Builder(context, channelId)
                 .setStyle(NotificationCompat.DecoratedCustomViewStyle())
                 .addPerson(notificationsManager.getPerson(contact, displayName, roundPicture))
                 .setSmallIcon(R.drawable.topbar_call_notification)

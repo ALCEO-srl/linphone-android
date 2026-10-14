@@ -38,6 +38,7 @@ import android.view.WindowManager
 import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.Fragment
 import java.util.*
+import org.linphone.R
 import org.linphone.core.Call
 import org.linphone.core.ChatRoom
 import org.linphone.core.Content
@@ -197,7 +198,11 @@ class Compatibility {
             if (Version.sdkAboveOrEqual(Version.API26_O_80)) {
                 Api26Compatibility.createServiceChannel(context, notificationManager)
                 Api26Compatibility.createMissedCallChannel(context, notificationManager)
-                Api26Compatibility.createIncomingCallChannel(context, notificationManager)
+                if (isRingtonePlayedByNotification()) {
+                    Api37Compatibility.createIncomingCallChannel(context, notificationManager)
+                } else {
+                    Api26Compatibility.createIncomingCallChannel(context, notificationManager)
+                }
                 if (Version.sdkAboveOrEqual(Version.API29_ANDROID_10)) {
                     Api29Compatibility.createMessageChannel(context, notificationManager)
                 } else {
@@ -223,22 +228,57 @@ class Compatibility {
             return WindowManager.LayoutParams.TYPE_PHONE
         }
 
+        // dms: on Android 17+ the ringtone is the sound of the incoming call channel (see Api37Compatibility)
+        fun isRingtonePlayedByNotification(): Boolean {
+            return Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN
+        }
+
+        // ring = false: Android 17+ channel without sound nor vibration, used while Telecom hasn't asked to ring yet
+        // (see NativeCallWrapper.onShowIncomingCallUi) or once the call has been silenced
+        fun getIncomingCallChannelId(context: Context, ring: Boolean = true): String {
+            return if (!isRingtonePlayedByNotification()) {
+                context.getString(R.string.notification_channel_incoming_call_id)
+            } else if (ring) {
+                context.getString(R.string.notification_channel_incoming_call_ringing_id)
+            } else {
+                context.getString(R.string.notification_channel_incoming_call_silent_id)
+            }
+        }
+
         fun createIncomingCallNotification(
             context: Context,
             call: Call,
             notifiable: Notifiable,
             pendingIntent: PendingIntent,
-            notificationsManager: NotificationsManager
+            notificationsManager: NotificationsManager,
+            ring: Boolean = true
+        ): Notification {
+            val channelId = getIncomingCallChannelId(context, ring)
+            val notification = createIncomingCallNotificationForDevice(context, call, notifiable, pendingIntent, notificationsManager, channelId)
+            if (isRingtonePlayedByNotification()) {
+                // Ring until the notification is updated (call answered) or removed (call ended / declined)
+                notification.flags = notification.flags or Notification.FLAG_INSISTENT
+            }
+            return notification
+        }
+
+        private fun createIncomingCallNotificationForDevice(
+            context: Context,
+            call: Call,
+            notifiable: Notifiable,
+            pendingIntent: PendingIntent,
+            notificationsManager: NotificationsManager,
+            channelId: String
         ): Notification {
             val manufacturer = Build.MANUFACTURER.lowercase(Locale.getDefault())
             // Samsung One UI 4.0 (API 31) doesn't (currently) display CallStyle notifications well
             // Tested on Samsung S10 and Z Fold 2
             if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12) && manufacturer != "samsung") {
-                return Api31Compatibility.createIncomingCallNotification(context, call, notifiable, pendingIntent, notificationsManager)
+                return Api31Compatibility.createIncomingCallNotification(context, call, notifiable, pendingIntent, notificationsManager, channelId)
             } else if (manufacturer == "xiaomi") { // Xiaomi devices don't handle CustomHeadsUpContentView correctly
-                return XiaomiCompatibility.createIncomingCallNotification(context, call, notifiable, pendingIntent, notificationsManager)
+                return XiaomiCompatibility.createIncomingCallNotification(context, call, notifiable, pendingIntent, notificationsManager, channelId)
             }
-            return Api26Compatibility.createIncomingCallNotification(context, call, notifiable, pendingIntent, notificationsManager)
+            return Api26Compatibility.createIncomingCallNotification(context, call, notifiable, pendingIntent, notificationsManager, channelId)
         }
 
         fun createCallNotification(

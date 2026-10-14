@@ -35,6 +35,10 @@
     (https://developer.android.com/guide/topics/connectivity/bluetooth/permissions) -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
+    <!-- Needed starting Android 17 (target 37) to reach devices on the local network
+    (SIP / RTP with peers or servers in the same LAN), same "Nearby devices" group as BLUETOOTH_CONNECT -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+
     <!-- Needed for foreground service
     (https://developer.android.com/guide/components/foreground-services) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
