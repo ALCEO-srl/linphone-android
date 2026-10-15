@@ -138,12 +138,12 @@ class NativeCallWrapper(var callId: String) : Connection() {
     }
 
     // dms: Telecom asks the self-managed app to show its incoming call UI and ring: on Android 17+ the ringtone is
-    // the incoming call notification sound, post it again now (its first sound was stopped by Telecom)
+    // the incoming call notification sound (a sound started before is stopped by Telecom), see NotificationsManager
     override fun onShowIncomingCallUi() {
         Log.i("[Connection] Telecom asks to show the incoming call UI for call with id: $callId")
         if (Compatibility.isRingtonePlayedByNotification()) {
             val call = getCall() ?: return
-            coreContext.notificationsManager.refreshIncomingCallNotification(call, true)
+            coreContext.notificationsManager.requestIncomingCallRingtone(call)
         }
     }
 

@@ -104,6 +104,17 @@ class NotificationsManager(private val context: Context) {
 
     private var service: CoreService? = null
 
+    // dms: service instance already promoted to foreground, so that the same instance isn't promoted again: every
+    // startForeground posts the notification again, and on Android 17 posting the ringing incoming call notification
+    // again shortly after it started ringing makes the system mute it ("Muting recently noisy")
+    private var foregroundServiceInstance: CoreService? = null
+
+    // dms: Android 17+, ringtone = incoming call notification sound (see Api37Compatibility). With Telecom it rings
+    // once Telecom asked for it (requestIncomingCallRingtone), and always with the last post made while the call
+    // is set up (the one promoting the service to foreground), so that it isn't posted again while ringing
+    private var ringRequestedCallId: String? = null
+    private var incomingCallNotificationCallId: String? = null
+
     var currentlyDisplayedChatRoomAddress: String? = null
 
     private val listener: CoreListenerStub = object : CoreListenerStub() {
@@ -344,13 +355,20 @@ class NotificationsManager(private val context: Context) {
             return
         }
         Log.i("[Notifications Manager] Refreshing foreground service types")
-        Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, notif)
+        if (Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, notif)) {
+            foregroundServiceInstance = coreService
+        }
     }
 
     fun startCallForeground(coreService: CoreService) {
         service = coreService
         Log.w("#\$#\$#\$#\$ [startCallForeground] currentFgNotifId=$currentForegroundServiceNotificationId callsNb=${coreContext.core.callsNb}")
         when {
+            currentForegroundServiceNotificationId != 0 && coreService === foregroundServiceInstance -> {
+                // dms: called twice for the same instance when a call starts (SDK showForegroundServiceNotification
+                // and CoreService.onStartCommand): it is already in foreground, don't post the notification again
+                Log.i("[Notifications Manager] Service instance is already in foreground [$currentForegroundServiceNotificationId], nothing to do")
+            }
             currentForegroundServiceNotificationId != 0 -> {
                 if (currentForegroundServiceNotificationId != SERVICE_NOTIF_ID) {
                     // This is a call notification ID. The service instance may have changed
@@ -358,7 +376,9 @@ class NotificationsManager(private val context: Context) {
                     val cachedNotif = currentCallNotification
                     if (cachedNotif != null) {
                         Log.w("#\$#\$#\$#\$ [startCallForeground] BRANCH: re-promuovo nuovo service con notifica chiamata cachedNotifId=$currentForegroundServiceNotificationId")
-                        Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, cachedNotif)
+                        if (Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, cachedNotif)) {
+                            foregroundServiceInstance = coreService
+                        }
                     } else {
                         Log.e("[Notifications Manager] There is already a foreground service notification [$currentForegroundServiceNotificationId] but no cached call notification")
                         Log.w("#\$#\$#\$#\$ [startCallForeground] BRANCH: notifId diverso da SERVICE_NOTIF_ID ma no cached notif")
@@ -370,8 +390,8 @@ class NotificationsManager(private val context: Context) {
                     // keeps granting microphone access in background.
                     Log.w("#\$#\$#\$#\$ [startCallForeground] BRANCH: già FGS - re-promuovo su istanza corrente con notifId=$currentForegroundServiceNotificationId")
                     val notif = serviceNotification
-                    if (notif != null) {
-                        Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, notif)
+                    if (notif != null && Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, notif)) {
+                        foregroundServiceInstance = coreService
                     }
                 }
             }
@@ -406,10 +426,13 @@ class NotificationsManager(private val context: Context) {
 
         currentForegroundServiceNotificationId = SERVICE_NOTIF_ID
         Log.i("[Notifications Manager] Starting service as foreground [$currentForegroundServiceNotificationId]")
-        Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, serviceNotification)
+        if (Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, serviceNotification)) {
+            foregroundServiceInstance = coreService
+        }
     }
 
-    private fun startForeground(notificationId: Int, callNotification: Notification) {
+    // Returns true if the service is now in foreground with this notification (which has then been posted)
+    private fun startForeground(notificationId: Int, callNotification: Notification): Boolean {
         if (currentForegroundServiceNotificationId == 0 && service != null) {
             Log.i("[Notifications Manager] Starting service as foreground using call notification [$notificationId]")
             try {
@@ -418,11 +441,11 @@ class NotificationsManager(private val context: Context) {
 
                 val coreService = service
                 if (coreService != null) {
-                    Compatibility.startForegroundService(
-                        coreService,
-                        currentForegroundServiceNotificationId,
-                        callNotification
-                    )
+                    if (Compatibility.startForegroundService(coreService, currentForegroundServiceNotificationId, callNotification)) {
+                        foregroundServiceInstance = coreService
+                        return true
+                    }
+                    currentForegroundServiceNotificationId = 0
                 } else {
                     Log.w("[Notifications Manager] No Service found, can't start it as foreground")
                     currentForegroundServiceNotificationId = 0
@@ -434,6 +457,7 @@ class NotificationsManager(private val context: Context) {
         } else {
             Log.w("[Notifications Manager] Can't start foreground service using notification id [$notificationId] (current foreground service notification id is [$currentForegroundServiceNotificationId]) and service [$service]")
         }
+        return false
     }
 
     fun stopForegroundNotification() {
@@ -443,6 +467,7 @@ class NotificationsManager(private val context: Context) {
                 currentForegroundServiceNotificationId = 0
             }
             service?.stopForeground(true)
+            foregroundServiceInstance = null
         }
     }
 
@@ -561,15 +586,37 @@ class NotificationsManager(private val context: Context) {
             Log.e("[Notifications Manager] Failed to get android.provider.Settings.Secure.getInt(lock_screen_show_notifications): $e")
         }
 
-        // dms: with Telecom, on Android 17+ the notification only rings when Telecom asks for it (onShowIncomingCallUi)
-        val ring = !(Compatibility.isRingtonePlayedByNotification() && TelecomHelper.exists())
+        // dms: a post made while the service isn't in foreground yet will be followed by the one promoting it,
+        // which must be the one that rings (see ringRequestedCallId)
+        val callId = call.callLog.callId
+        val promotionPending = !useAsForeground && currentForegroundServiceNotificationId == 0
+        val ring = isIncomingCallRingtoneAllowed(callId) && !promotionPending
         val notification = Compatibility.createIncomingCallNotification(context, call, notifiable, getIncomingCallPendingIntent(), this, ring)
-        Log.i("[Notifications Manager] Notifying incoming call notification [${notifiable.notificationId}], ring=$ring")
-        notify(notifiable.notificationId, notification)
+        incomingCallNotificationCallId = callId
 
-        if (useAsForeground) {
-            Log.i("[Notifications Manager] Notifying incoming call notification for foreground service [${notifiable.notificationId}]")
-            startForeground(notifiable.notificationId, notification)
+        // startForeground posts the notification, don't post it twice
+        if (useAsForeground && startForeground(notifiable.notificationId, notification)) {
+            Log.i("[Notifications Manager] Incoming call notification [${notifiable.notificationId}] posted for foreground service, ring=$ring")
+        } else {
+            Log.i("[Notifications Manager] Notifying incoming call notification [${notifiable.notificationId}], ring=$ring")
+            notify(notifiable.notificationId, notification)
+        }
+    }
+
+    private fun isIncomingCallRingtoneAllowed(callId: String?): Boolean {
+        return !Compatibility.isRingtonePlayedByNotification() || !TelecomHelper.exists() || callId == ringRequestedCallId
+    }
+
+    // dms: Telecom asks the self-managed call to ring (onShowIncomingCallUi). If the notification is already posted
+    // and the service already in foreground it is posted again now with the ringtone, otherwise the post promoting
+    // the service will ring
+    fun requestIncomingCallRingtone(call: Call) {
+        val callId = call.callLog.callId
+        ringRequestedCallId = callId
+        if (incomingCallNotificationCallId == callId && currentForegroundServiceNotificationId != 0) {
+            refreshIncomingCallNotification(call, true)
+        } else {
+            Log.i("[Notifications Manager] Ringtone requested, it will ring with the notification promoting the service")
         }
     }
 
@@ -577,6 +624,10 @@ class NotificationsManager(private val context: Context) {
     // Telecom stops it when the self-managed call starts ringing, so it is posted again when Telecom asks to show
     // the incoming call UI (ring = true), and without sound when Telecom asks to silence the call (ring = false)
     fun refreshIncomingCallNotification(call: Call, ring: Boolean) {
+        if (!ring) {
+            // Silenced: posts made later for this call won't ring
+            ringRequestedCallId = null
+        }
         val notifiable = getNotifiableForCall(call)
         val notification = Compatibility.createIncomingCallNotification(context, call, notifiable, getIncomingCallPendingIntent(), this, ring)
         Log.i("[Notifications Manager] Refreshing incoming call notification [${notifiable.notificationId}], ring=$ring")

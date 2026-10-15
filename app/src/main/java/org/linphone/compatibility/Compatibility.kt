@@ -308,8 +308,9 @@ class Compatibility {
             }
         }
 
-        fun startForegroundService(service: Service, notifId: Int, notif: Notification?) {
-            if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
+        // Returns true if the service is now in foreground (the notification has been posted)
+        fun startForegroundService(service: Service, notifId: Int, notif: Notification?): Boolean {
+            return if (Version.sdkAboveOrEqual(Version.API31_ANDROID_12)) {
                 Api31Compatibility.startForegroundService(service, notifId, notif)
             } else {
                 Api23Compatibility.startForegroundService(service, notifId, notif)

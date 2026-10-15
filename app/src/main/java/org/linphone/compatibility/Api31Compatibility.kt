@@ -212,7 +212,7 @@ class Api31Compatibility {
             }
         }
 
-        fun startForegroundService(service: Service, notifId: Int, notif: Notification?) {
+        fun startForegroundService(service: Service, notifId: Int, notif: Notification?): Boolean {
             // Include MICROPHONE alongside PHONE_CALL so Android 15+ doesn't suspend
             // audio capture when the screen turns off or the app goes to background.
             // dms: MICROPHONE / CAMERA types only if the matching permission is granted, otherwise
@@ -227,16 +227,19 @@ class Api31Compatibility {
 
             try {
                 service.startForeground(notifId, notif!!, types)
+                return true
             } catch (fssnae: ForegroundServiceStartNotAllowedException) {
                 Log.e("[Api31 Compatibility] Can't start service as foreground! $fssnae")
             } catch (se: SecurityException) {
                 Log.e("[Api31 Compatibility] Security exception starting foreground service with types [$types], retrying with phone call only: $se")
                 try {
                     service.startForeground(notifId, notif!!, ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL)
+                    return true
                 } catch (e: Exception) {
                     Log.e("[Api31 Compatibility] Can't start service as foreground with phone call type either! $e")
                 }
             }
+            return false
         }
 
         fun enableAutoEnterPiP(activity: Activity, enable: Boolean, conference: Boolean) {

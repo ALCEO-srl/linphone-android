@@ -113,8 +113,9 @@ class Api23Compatibility {
             context.startService(intent)
         }
 
-        fun startForegroundService(service: Service, notifId: Int, notif: Notification?) {
+        fun startForegroundService(service: Service, notifId: Int, notif: Notification?): Boolean {
             service.startForeground(notifId, notif)
+            return true
         }
 
         fun hideAndroidSystemUI(hide: Boolean, window: Window) {
