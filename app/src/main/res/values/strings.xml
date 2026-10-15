@@ -137,6 +137,10 @@
     <string name="debug_popup_disable_logs">Disable logs</string>
     <string name="debug_popup_send_logs">Send logs</string>
     <string name="debug_popup_show_config_file">View config file</string>
+    <string name="debug_popup_enable_technician_mode">Enable technician mode</string>
+    <string name="debug_popup_disable_technician_mode">Disable technician mode</string>
+    <string name="debug_popup_technician_mode_enabled">Technician mode enabled until the app restarts</string>
+    <string name="debug_popup_technician_mode_disabled">Technician mode disabled</string>
     <string-array name="popup_send_log" translatable="false">
         <item>@string/debug_popup_disable_logs</item>
         <item>@string/debug_popup_send_logs</item>

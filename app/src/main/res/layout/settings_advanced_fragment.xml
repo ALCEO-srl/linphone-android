@@ -69,6 +69,7 @@
                 <TextView
                     style="@style/settings_category_font"
                     android:text="@string/advanced_settings_debug_title"
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     android:paddingTop="15dp"
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="10dp"
@@ -76,12 +77,14 @@
                     android:layout_height="wrap_content"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/advanced_settings_debug_mode_title}"
                     linphone:listener="@{viewModel.debugModeListener}"
                     linphone:checked="@={viewModel.debugMode}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/advanced_settings_logs_server_url_title}"
                     linphone:subtitle="@{@string/advanced_settings_logs_server_url_summary}"
@@ -91,12 +94,14 @@
                     linphone:enabled="@{viewModel.debugMode}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_basic"
                     linphone:title="@{@string/advanced_settings_send_debug_logs_title}"
                     linphone:listener="@{viewModel.sendDebugLogsListener}"
                     linphone:enabled="@{viewModel.debugMode}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_basic"
                     linphone:title="@{@string/advanced_settings_reset_debug_logs_title}"
                     linphone:listener="@{viewModel.resetDebugLogsListener}"
@@ -112,6 +117,7 @@
                     android:layout_height="wrap_content"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/advanced_settings_auto_start_title}"
                     linphone:listener="@{viewModel.autoStartListener}"
@@ -125,12 +131,14 @@
                     linphone:labels="@{viewModel.darkModeLabels}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/advanced_settings_animations_title}"
                     linphone:listener="@{viewModel.animationsListener}"
                     linphone:checked="@={viewModel.animations}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/advanced_settings_device_name_title}"
                     linphone:subtitle="@{@string/advanced_settings_device_name_summary}"
@@ -138,6 +146,7 @@
                     linphone:defaultValue="@{viewModel.deviceName}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/advanced_settings_remote_provisioning_url_title}"
                     linphone:listener="@{viewModel.remoteProvisioningUrlListener}"
@@ -145,6 +154,7 @@
                     linphone:inputType="@{InputType.TYPE_TEXT_VARIATION_URI}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/advanced_settings_vfs_title}"
                     linphone:subtitle="@{@string/advanced_settings_vfs_summary}"
@@ -153,6 +163,7 @@
                     linphone:enabled="@{!viewModel.vfs}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/advanced_settings_disable_fragment_security_title}"
                     linphone:subtitle="@{@string/advanced_settings_disable_fragment_security_summary}"

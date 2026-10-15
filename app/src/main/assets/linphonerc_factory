@@ -54,6 +54,10 @@ read_and_agree_terms_and_privacy=1
 settings_tunnel=0
 settings_conferences=0
 settings_contacts=0
+settings_audio=0
+settings_video=0
+settings_network=0
+debug_popup_magic=#230872#
 
 enable_native_address_book=0
 show_new_contact_account_dialog=0

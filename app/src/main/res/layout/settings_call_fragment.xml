@@ -104,17 +104,19 @@
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_use_telecom_manager_title}"
                     linphone:subtitle="@{@string/call_settings_use_telecom_manager_summary}"
-                    android:visibility="@{viewModel.api29OrHigher ? View.VISIBLE : View.GONE}"
+                    android:visibility="@{viewModel.technicianMode &amp;&amp; viewModel.api29OrHigher ? View.VISIBLE : View.GONE}"
                     linphone:listener="@{viewModel.useTelecomManagerListener}"
                     linphone:checked="@={viewModel.useTelecomManager}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_overlay_title}"
                     linphone:listener="@{viewModel.overlayListener}"
                     linphone:checked="@={viewModel.overlay}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_system_wide_overlay_title}"
                     linphone:subtitle="@{@string/call_settings_system_wide_overlay_summary}"
@@ -123,18 +125,21 @@
                     linphone:enabled="@{viewModel.overlay}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_sipinfo_dtmf_title}"
                     linphone:listener="@{viewModel.sipInfoDtmfListener}"
                     linphone:checked="@={viewModel.sipInfoDtmf}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_rfc2833_dtmf_title}"
                     linphone:listener="@{viewModel.rfc2833DtmfListener}"
                     linphone:checked="@={viewModel.rfc2833Dtmf}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_auto_start_recording_title}"
                     linphone:listener="@{viewModel.autoStartCallRecordingListener}"
@@ -148,6 +153,7 @@
                     android:visibility="gone"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_auto_start_title}"
                     linphone:subtitle="@{@string/call_settings_auto_start_summary}"
@@ -155,6 +161,7 @@
                     linphone:checked="@={viewModel.autoStart}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_auto_answer_title}"
                     linphone:listener="@{viewModel.autoAnswerListener}"
@@ -168,9 +175,10 @@
                     linphone:defaultValue="@{viewModel.autoAnswerDelay.toString()}"
                     linphone:inputType="@{InputType.TYPE_CLASS_NUMBER}"
                     linphone:enabled="@{viewModel.autoAnswer}"
-                    android:visibility="@{viewModel.autoAnswer ? View.VISIBLE : View.GONE}"/>
+                    android:visibility="@{viewModel.technicianMode &amp;&amp; viewModel.autoAnswer ? View.VISIBLE : View.GONE}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/call_settings_incoming_timeout_title}"
                     linphone:subtitle="@{@string/call_settings_incoming_timeout_summary}"
@@ -179,6 +187,7 @@
                     linphone:inputType="@{InputType.TYPE_CLASS_NUMBER}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/call_settings_voice_mail_uri_title}"
                     linphone:listener="@{viewModel.voiceMailUriListener}"
@@ -186,6 +195,7 @@
                     linphone:inputType="@{InputType.TYPE_TEXT_VARIATION_URI}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_redirect_to_voice_mail_declined_calls_title}"
                     linphone:listener="@{viewModel.redirectToVoiceMailIncomingDeclinedCallsListener}"
@@ -193,12 +203,14 @@
                     linphone:enabled="@{viewModel.voiceMailUri.length() > 0}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_accept_early_media_title}"
                     linphone:listener="@{viewModel.acceptEarlyMediaListener}"
                     linphone:checked="@={viewModel.acceptEarlyMedia}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_ring_during_early_media_title}"
                     linphone:listener="@{viewModel.ringDuringEarlyMediaListener}"
@@ -206,6 +218,7 @@
                     linphone:enabled="@{viewModel.acceptEarlyMedia}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_pause_calls_lost_audio_focus_title}"
                     linphone:listener="@{viewModel.pauseCallsWhenAudioFocusIsLostListener}"

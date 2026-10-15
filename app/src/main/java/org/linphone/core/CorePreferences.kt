@@ -568,11 +568,15 @@ class CorePreferences constructor(private val context: Context) {
     val showTunnelSettings: Boolean
         get() = config.getBool("app", "settings_tunnel", true)
 
+    // dms: technician mode, enabled from the debug popup (dialer code): shows the hidden settings and makes the
+    // read-only ones editable. Kept in memory only, it is disabled when the app restarts.
+    var technicianMode: Boolean = false
+
     val showAudioSettings: Boolean
-        get() = config.getBool("app", "settings_audio", true)
+        get() = technicianMode || config.getBool("app", "settings_audio", true)
 
     val showVideoSettings: Boolean
-        get() = config.getBool("app", "settings_video", true)
+        get() = technicianMode || config.getBool("app", "settings_video", true)
 
     val showCallSettings: Boolean
         get() = config.getBool("app", "settings_call", true)
@@ -581,7 +585,7 @@ class CorePreferences constructor(private val context: Context) {
         get() = config.getBool("app", "settings_chat", true)
 
     val showNetworkSettings: Boolean
-        get() = config.getBool("app", "settings_network", true)
+        get() = technicianMode || config.getBool("app", "settings_network", true)
 
     val showContactsSettings: Boolean
         get() = config.getBool("app", "settings_contacts", true)

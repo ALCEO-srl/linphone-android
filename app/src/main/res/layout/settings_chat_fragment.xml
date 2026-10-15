@@ -72,6 +72,7 @@
                     linphone:checked="@={viewModel.markAsReadNotifDismissal}"/>
 
                 <include
+                    android:visibility="gone"
                     layout="@layout/settings_widget_list"
                     linphone:title="@{@string/chat_settings_auto_download_title}"
                     linphone:subtitle="@{@string/chat_settings_auto_download_summary}"
@@ -80,22 +81,24 @@
                     linphone:labels="@{viewModel.autoDownloadLabels}"/>
 
                 <include
+                    android:visibility="gone"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/chat_settings_auto_download_max_size_title}"
                     linphone:subtitle="@{@string/chat_settings_auto_download_max_size_summary}"
                     linphone:listener="@{viewModel.autoDownloadMaxSizeListener}"
                     linphone:defaultValue="@{viewModel.autoDownloadMaxSize.toString()}"
                     linphone:inputType="@{InputType.TYPE_CLASS_NUMBER}"
-                    linphone:enabled="@{viewModel.autoDownloadIndex == 2}"
-                    android:visibility="@{viewModel.autoDownloadIndex == 2 ? View.VISIBLE : View.GONE}"/>
+                    linphone:enabled="@{viewModel.autoDownloadIndex == 2}"/>
 
                 <include
+                    android:visibility="gone"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/chat_settings_auto_download_voice_recordings}"
                     linphone:listener="@{viewModel.autoDownloadVoiceRecordingsListener}"
                     linphone:checked="@={viewModel.autoDownloadVoiceRecordings}"/>
 
                 <include
+                    android:visibility="gone"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/chat_settings_downloaded_media_public_title}"
                     linphone:enabled="@{!viewModel.vfs &amp;&amp; viewModel.autoDownloadIndex != 1}"
@@ -104,6 +107,7 @@
                     linphone:checked="@={viewModel.downloadedMediaPublic}"/>
 
                 <include
+                    android:visibility="gone"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/chat_settings_use_in_app_file_viewer_title}"
                     linphone:subtitle="@{@string/chat_settings_use_in_app_file_viewer_summary}"
@@ -140,6 +144,7 @@
                     linphone:checked="@={viewModel.hideRoomsRemovedProxies}"/>
 
                 <include
+                    android:visibility="gone"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/chat_settings_file_sharing_url_title}"
                     linphone:subtitle="@{@string/chat_settings_file_sharing_url_summary}"

@@ -109,6 +109,10 @@
     <string name="debug_popup_disable_logs">Disabilita i log</string>
     <string name="debug_popup_send_logs">Inviare log</string>
     <string name="debug_popup_show_config_file">Visualizza il file di configurazione</string>
+    <string name="debug_popup_enable_technician_mode">Attiva modalità tecnico</string>
+    <string name="debug_popup_disable_technician_mode">Disattiva modalità tecnico</string>
+    <string name="debug_popup_technician_mode_enabled">Modalità tecnico attiva fino al riavvio dell\'app</string>
+    <string name="debug_popup_technician_mode_disabled">Modalità tecnico disattivata</string>
     <string name="dialer_transfer_succeded">La chiamata è stata trasferita</string>
     <string name="dialer_transfer_failed">Non è stato possibile trasferire la chiamata</string>
 

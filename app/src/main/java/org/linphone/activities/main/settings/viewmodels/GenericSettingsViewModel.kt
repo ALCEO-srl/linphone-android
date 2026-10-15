@@ -26,4 +26,7 @@ import org.linphone.LinphoneApplication.Companion.corePreferences
 abstract class GenericSettingsViewModel : ViewModel() {
     protected val prefs = corePreferences
     protected val core = coreContext.core
+
+    // dms: hidden / read-only settings are shown / editable in technician mode only
+    val technicianMode = prefs.technicianMode
 }

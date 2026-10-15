@@ -91,6 +91,7 @@
                     linphone:inputType="@{InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD}"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/account_settings_domain_title}"
                     linphone:subtitle="@{@string/account_settings_domain_summary}"
@@ -99,6 +100,7 @@
                     linphone:inputType="@{InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS}"/>
 
                 <include
+                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/account_settings_display_name_title}"
                     linphone:listener="@{viewModel.displayNameListener}"
@@ -125,7 +127,7 @@
                     linphone:title="@{@string/account_settings_default_title}"
                     linphone:listener="@{viewModel.isDefaultListener}"
                     linphone:checked="@={viewModel.isDefault}"
-                    linphone:enabled="@{!viewModel.isDefault}"/>
+                    linphone:enabled="@{viewModel.technicianMode &amp;&amp; !viewModel.isDefault}"/>
 
                 <include
                     layout="@layout/settings_widget_basic"
@@ -148,6 +150,7 @@
                     android:layout_height="wrap_content"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/account_settings_push_notification_title}"
                     linphone:subtitle="@{@string/account_settings_push_notification_summary}"
@@ -156,6 +159,7 @@
                     android:visibility="@{viewModel.pushNotificationsAvailable ? View.VISIBLE : View.GONE}"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_list"
                     linphone:title="@{@string/account_settings_transport_title}"
                     linphone:listener="@{viewModel.transportListener}"
@@ -163,6 +167,7 @@
                     linphone:labels="@{viewModel.transportLabels}"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/account_settings_proxy_title}"
                     linphone:listener="@{viewModel.proxyListener}"
@@ -170,6 +175,7 @@
                     linphone:inputType="@{InputType.TYPE_TEXT_VARIATION_URI}"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/account_settings_outbound_proxy_title}"
                     linphone:subtitle="@{@string/account_settings_outbound_proxy_summary}"
@@ -177,6 +183,7 @@
                     linphone:checked="@={viewModel.outboundProxy}"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/account_settings_stun_server_title}"
                     linphone:listener="@{viewModel.stunServerListener}"
@@ -188,10 +195,11 @@
                     linphone:title="@{@string/account_settings_ice_title}"
                     linphone:listener="@{viewModel.iceListener}"
                     linphone:checked="@={viewModel.ice}"
-                    linphone:enabled="@{viewModel.stunServer.length() > 0}"
+                    linphone:enabled="@{viewModel.technicianMode &amp;&amp; viewModel.stunServer.length() > 0}"
                     android:visibility="invisible"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/account_settings_avpf_title}"
                     linphone:listener="@{viewModel.avpfListener}"
@@ -204,9 +212,10 @@
                     linphone:listener="@{viewModel.avpfRrIntervalListener}"
                     linphone:defaultValue="@{viewModel.avpfRrInterval.toString()}"
                     linphone:inputType="@{InputType.TYPE_CLASS_NUMBER}"
-                    linphone:enabled="@{viewModel.avpf}"/>
+                    linphone:enabled="@{viewModel.technicianMode &amp;&amp; viewModel.avpf}"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/account_settings_expires_title}"
                     linphone:subtitle="@{@string/account_settings_expires_summary}"
@@ -215,6 +224,7 @@
                     linphone:inputType="@{InputType.TYPE_CLASS_NUMBER}"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_text"
                     linphone:title="@{@string/account_settings_prefix_title}"
                     linphone:subtitle="@{@string/account_settings_prefix_summary}"
@@ -223,6 +233,7 @@
                     linphone:inputType="@{InputType.TYPE_CLASS_NUMBER}"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/account_settings_apply_prefix_for_calls_title}"
                     linphone:subtitle="@{@string/account_settings_apply_prefix_for_calls_summary}"
@@ -230,6 +241,7 @@
                     linphone:checked="@={viewModel.dialPrefix}"/>
 
                 <include
+                    linphone:enabled="@{viewModel.technicianMode}"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/account_settings_escape_plus_title}"
                     linphone:listener="@{viewModel.escapePlusListener}"

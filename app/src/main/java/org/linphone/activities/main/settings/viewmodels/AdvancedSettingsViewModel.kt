@@ -31,6 +31,9 @@ import org.linphone.core.LogLevel
 import org.linphone.utils.Event
 
 class AdvancedSettingsViewModel : LogsUploadViewModel() {
+    // dms: hidden settings are shown in technician mode only (see GenericSettingsViewModel)
+    val technicianMode = corePreferences.technicianMode
+
     private val prefs = corePreferences
     private val core = coreContext.core
 

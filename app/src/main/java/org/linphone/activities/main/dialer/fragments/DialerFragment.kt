@@ -448,11 +448,16 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
         val alertDialog = MaterialAlertDialogBuilder(requireContext())
         alertDialog.setTitle(getString(R.string.debug_popup_title))
 
-        val items = if (corePreferences.debugLogs) {
+        val logItems = if (corePreferences.debugLogs) {
             resources.getStringArray(R.array.popup_send_log)
         } else {
             resources.getStringArray(R.array.popup_enable_log)
         }
+        // dms: technician mode (hidden / read-only settings), before the last item (cancel)
+        val technicianItem = getString(
+            if (corePreferences.technicianMode) R.string.debug_popup_disable_technician_mode else R.string.debug_popup_enable_technician_mode
+        )
+        val items = (logItems.dropLast(1) + technicianItem + logItems.last()).toTypedArray()
 
         alertDialog.setItems(items) { _, which ->
             when (items[which]) {
@@ -468,6 +473,15 @@ class DialerFragment : SecureFragment<DialerFragmentBinding>() {
                 }
                 getString(R.string.debug_popup_show_config_file) -> {
                     navigateToConfigFileViewer()
+                }
+                technicianItem -> {
+                    corePreferences.technicianMode = !corePreferences.technicianMode
+                    Log.w("[Dialer] Technician mode is now ${corePreferences.technicianMode}")
+                    Toast.makeText(
+                        requireContext(),
+                        if (corePreferences.technicianMode) R.string.debug_popup_technician_mode_enabled else R.string.debug_popup_technician_mode_disabled,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
