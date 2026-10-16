@@ -23,7 +23,6 @@ import android.annotation.TargetApi
 import android.app.*
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import org.linphone.LinphoneApplication.Companion.coreContext
@@ -70,7 +69,7 @@ class XiaomiCompatibility {
                 contact = null
                 displayName = conferenceInfo.subject ?: context.getString(R.string.conference)
                 address = LinphoneUtils.getDisplayableAddress(conferenceInfo.organizer)
-                roundPicture = BitmapFactory.decodeResource(context.resources, R.drawable.voip_multiple_contacts_avatar_alt)
+                roundPicture = ImageUtils.decodeSampledResource(context, R.drawable.voip_multiple_contacts_avatar_alt)
                 info = context.getString(R.string.incoming_group_call_notification_title)
                 Log.i("[Notifications Manager] Displaying incoming group call notification with subject $displayName and remote contact address $remoteContact")
             }
@@ -78,7 +77,7 @@ class XiaomiCompatibility {
             val builder = NotificationCompat.Builder(context, channelId)
                 .addPerson(notificationsManager.getPerson(contact, displayName, roundPicture))
                 .setSmallIcon(R.drawable.topbar_call_notification)
-                .setLargeIcon(roundPicture ?: BitmapFactory.decodeResource(context.resources, R.drawable.voip_single_contact_avatar_alt))
+                .setLargeIcon(roundPicture ?: ImageUtils.decodeSampledResource(context, R.drawable.voip_single_contact_avatar_alt))
                 .setContentTitle(displayName)
                 .setContentText(address)
                 .setSubText(info)

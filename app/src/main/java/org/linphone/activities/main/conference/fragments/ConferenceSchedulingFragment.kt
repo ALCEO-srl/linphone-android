@@ -19,13 +19,11 @@
  */
 package org.linphone.activities.main.conference.fragments
 
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.text.format.DateFormat.is24HourFormat
 import android.view.View
 import androidx.navigation.navGraphViewModels
-import com.google.android.material.datepicker.CalendarConstraints
-import com.google.android.material.datepicker.DateValidatorPointForward
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import org.linphone.LinphoneApplication.Companion.coreContext
@@ -35,6 +33,8 @@ import org.linphone.activities.main.conference.viewmodels.ConferenceSchedulingVi
 import org.linphone.activities.navigateToParticipantsList
 import org.linphone.core.Factory
 import org.linphone.core.tools.Log
+import java.util.Calendar
+import java.util.TimeZone
 import org.linphone.databinding.ConferenceSchedulingFragmentBinding
 
 class ConferenceSchedulingFragment : GenericFragment<ConferenceSchedulingFragmentBinding>() {
@@ -81,23 +81,27 @@ class ConferenceSchedulingFragment : GenericFragment<ConferenceSchedulingFragmen
             navigateToParticipantsList()
         }
 
+        // dms: platform DatePickerDialog instead of MaterialDatePicker, which uses the Window.setStatusBarColor /
+        // setNavigationBarColor APIs deprecated in Android 15 (Play Console warning)
         binding.setDatePickerClickListener {
-            val constraintsBuilder =
-                CalendarConstraints.Builder()
-                    .setValidator(DateValidatorPointForward.now())
-            val picker =
-                MaterialDatePicker.Builder.datePicker()
-                    .setCalendarConstraints(constraintsBuilder.build())
-                    .setTitleText(R.string.conference_schedule_date)
-                    .setSelection(viewModel.dateTimestamp)
-                    .build()
-            picker.addOnPositiveButtonClickListener {
-                val selection = picker.selection
-                if (selection != null) {
-                    viewModel.setDate(selection)
-                }
-            }
-            picker.show(requireFragmentManager(), "Date picker")
+            val current = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+            current.timeInMillis = viewModel.dateTimestamp
+            val dialog = DatePickerDialog(
+                requireContext(),
+                { _, year, month, day ->
+                    // Same value as MaterialDatePicker gave: midnight UTC of the selected day
+                    val selection = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                    selection.clear()
+                    selection.set(year, month, day)
+                    viewModel.setDate(selection.timeInMillis)
+                },
+                current.get(Calendar.YEAR),
+                current.get(Calendar.MONTH),
+                current.get(Calendar.DAY_OF_MONTH)
+            )
+            dialog.datePicker.minDate = System.currentTimeMillis() - 1000
+            dialog.setTitle(R.string.conference_schedule_date)
+            dialog.show()
         }
 
         binding.setTimePickerClickListener {

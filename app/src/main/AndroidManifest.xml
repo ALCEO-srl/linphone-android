@@ -49,9 +49,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
 
-    <!-- Needed for auto start at boot -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
     <application
         android:name=".LinphoneApplication"
         android:allowBackup="false"
@@ -203,13 +200,9 @@
             android:enabled="true"
             android:exported="false" />
 
-        <receiver android:name=".core.BootReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
-        </receiver>
+        <!-- dms: no auto start at boot / after update (BootReceiver removed): calls arrive by push, the
+        service is started by the push; the boot start only showed the service notification and since
+        target 35 Android doesn't allow a phoneCall/microphone/camera foreground service from BOOT_COMPLETED -->
 
         <!-- Providers -->
 

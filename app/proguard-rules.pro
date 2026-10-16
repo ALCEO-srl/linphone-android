@@ -17,7 +17,11 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep public class * extends androidx.fragment.app.Fragment { *; }
+# dms: only the app fragments and only their constructor: keeping every Fragment also kept unused Material classes
+# (BottomSheetDialogFragment, MaterialDatePicker, EdgeToEdgeUtils) using the deprecated Window.setStatusBarColor /
+# setNavigationBarColor (Play Console warning). With { *; } R8 also keeps the inherited Fragment methods
+# (onStart, onSaveInstanceState...) and so every override of them, in any library Fragment.
+-keep public class org.linphone.** extends androidx.fragment.app.Fragment { public <init>(); }
 -dontwarn com.google.errorprone.annotations.Immutable
 
 -keepattributes *Annotation*

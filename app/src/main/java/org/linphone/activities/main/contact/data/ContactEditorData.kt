@@ -20,7 +20,6 @@
 package org.linphone.activities.main.contact.data
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.media.ExifInterface
 import android.provider.ContactsContract
 import androidx.lifecycle.MutableLiveData
@@ -165,7 +164,8 @@ class ContactEditorData(val friend: Friend?) : ContactDataInterface {
 
     fun setPictureFromPath(picturePath: String) {
         var orientation = ExifInterface.ORIENTATION_NORMAL
-        var image = BitmapFactory.decodeFile(picturePath)
+        // dms: downsampled (Play Console: "BitmapFactory without downsampling")
+        var image = ImageUtils.decodeSampledFile(picturePath, 1024)
 
         try {
             val ei = ExifInterface(picturePath)

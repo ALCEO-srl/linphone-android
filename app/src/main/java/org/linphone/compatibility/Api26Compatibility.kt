@@ -27,7 +27,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -183,7 +182,7 @@ class Api26Compatibility {
                 contact = null
                 displayName = conferenceInfo.subject ?: context.getString(R.string.conference)
                 address = LinphoneUtils.getDisplayableAddress(conferenceInfo.organizer)
-                roundPicture = BitmapFactory.decodeResource(context.resources, R.drawable.voip_multiple_contacts_avatar_alt)
+                roundPicture = ImageUtils.decodeSampledResource(context, R.drawable.voip_multiple_contacts_avatar_alt)
                 info = context.getString(R.string.incoming_group_call_notification_title)
                 Log.i("[Notifications Manager] Displaying incoming group call notification with subject $displayName for remote contact address $remoteContact")
             }
@@ -254,11 +253,10 @@ class Api26Compatibility {
                 person = notificationsManager.getPerson(contact, displayName, roundPicture)
             } else {
                 title = conferenceInfo.subject ?: context.getString(R.string.conference)
-                roundPicture = BitmapFactory.decodeResource(context.resources, R.drawable.voip_multiple_contacts_avatar_alt)
-                person = Person.Builder()
-                    .setName(title)
-                    .setIcon(IconCompat.createWithBitmap(roundPicture))
-                    .build()
+                roundPicture = ImageUtils.decodeSampledResource(context, R.drawable.voip_multiple_contacts_avatar_alt)
+                val builder = Person.Builder().setName(title)
+                roundPicture?.let { builder.setIcon(IconCompat.createWithBitmap(it)) }
+                person = builder.build()
             }
 
             when (call.state) {

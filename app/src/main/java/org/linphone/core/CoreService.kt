@@ -43,6 +43,13 @@ class CoreService : CoreService() {
             Log.w("#\$#\$#\$#\$ [SERVICE] BRANCH: PushReceived - avvio FGS PHONE_CALL")
             ensureCoreExists(applicationContext, pushReceived = true, service = this, useAutoStartDescription = false)
             coreContext.notificationsManager.startForeground(this, useAutoStartDescription = false)
+            // dms: the service notification is removed when the push has refreshed the registration
+            // (RegistrationState.Ok). If that already happened before this service started, nothing would
+            // remove it any more (e.g. after a reboot it stayed there): check the state now
+            if (coreContext.core.callsNb == 0 && coreContext.core.defaultAccount?.state == RegistrationState.Ok) {
+                Log.i("[Service] Default account already registered and no call, removing the service notification")
+                coreContext.notificationsManager.stopForegroundNotificationIfPossible()
+            }
         } else if (intent?.extras?.get("StartForeground") == true) {
             Log.i("[Service] Starting as foreground due to device boot or app update")
             ensureCoreExists(applicationContext, pushReceived = false, service = this, useAutoStartDescription = true)

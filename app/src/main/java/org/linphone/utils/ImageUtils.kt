@@ -28,6 +28,38 @@ import org.linphone.core.tools.Log
 
 class ImageUtils {
     companion object {
+        // dms: decode with BitmapFactory.Options.inSampleSize so that the bitmap isn't bigger than needed
+        // (Play Console: "BitmapFactory without downsampling"). Default size: notification large icon.
+        fun decodeSampledResource(context: Context, resId: Int, reqSize: Int = getNotificationLargeIconSize(context)): Bitmap? {
+            val options = BitmapFactory.Options()
+            options.inJustDecodeBounds = true
+            BitmapFactory.decodeResource(context.resources, resId, options)
+            options.inSampleSize = computeInSampleSize(options, reqSize)
+            options.inJustDecodeBounds = false
+            return BitmapFactory.decodeResource(context.resources, resId, options)
+        }
+
+        fun decodeSampledFile(path: String, reqSize: Int): Bitmap? {
+            val options = BitmapFactory.Options()
+            options.inJustDecodeBounds = true
+            BitmapFactory.decodeFile(path, options)
+            options.inSampleSize = computeInSampleSize(options, reqSize)
+            options.inJustDecodeBounds = false
+            return BitmapFactory.decodeFile(path, options)
+        }
+
+        private fun computeInSampleSize(options: BitmapFactory.Options, reqSize: Int): Int {
+            var sampleSize = 1
+            while (options.outWidth / (sampleSize * 2) >= reqSize && options.outHeight / (sampleSize * 2) >= reqSize) {
+                sampleSize *= 2
+            }
+            return sampleSize
+        }
+
+        private fun getNotificationLargeIconSize(context: Context): Int {
+            return context.resources.getDimensionPixelSize(android.R.dimen.notification_large_icon_width)
+        }
+
         fun getRoundBitmapFromUri(
             context: Context,
             fromPictureUri: Uri?
