@@ -30,7 +30,8 @@ import org.linphone.utils.LinphoneUtils
 
 class SideMenuViewModel : ViewModel() {
     val showAccounts: Boolean = corePreferences.showAccountsInSideMenu
-    val showAssistant: Boolean = corePreferences.showAssistantInSideMenu
+    // dms: BcsPhone handles a single account, the assistant is only offered when there is none
+    val showAssistant = MutableLiveData<Boolean>()
     val showSettings: Boolean = corePreferences.showSettingsInSideMenu
     val showRecordings: Boolean = corePreferences.showRecordingsInSideMenu
     val showScheduledConferences = MutableLiveData<Boolean>()
@@ -108,6 +109,8 @@ class SideMenuViewModel : ViewModel() {
             }
         }
         accounts.value = list
+        showAssistant.value = corePreferences.showAssistantInSideMenu &&
+            LinphoneUtils.getAccountsNotHidden().isEmpty()
 
         showScheduledConferences.value = corePreferences.showScheduledConferencesInSideMenu &&
             LinphoneUtils.isRemoteConferencingAvailable()

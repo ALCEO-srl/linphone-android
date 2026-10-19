@@ -71,6 +71,7 @@
                     android:paddingBottom="5dp"
                     android:orientation="vertical">
 
+                    <!-- dms: primary account (local identity without an account) hidden, BCS always uses an account -->
                     <TextView
                         style="@style/settings_category_font"
                         android:text="@string/settings_primary_account_title"
@@ -78,7 +79,7 @@
                         android:layout_marginRight="10dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:visibility="@{viewModel.accounts.empty ? View.VISIBLE : View.GONE}"/>
+                        android:visibility="gone"/>
 
                     <include
                         layout="@layout/settings_widget_text"
@@ -86,7 +87,7 @@
                         linphone:listener="@{viewModel.primaryAccountDisplayNameListener}"
                         linphone:defaultValue="@{viewModel.primaryAccountDisplayName}"
                         linphone:inputType="@{InputType.TYPE_CLASS_TEXT}"
-                        android:visibility="@{viewModel.accounts.empty ? View.VISIBLE : View.GONE}"/>
+                        android:visibility="gone"/>
 
                     <include
                         layout="@layout/settings_widget_text"
@@ -94,7 +95,7 @@
                         linphone:listener="@{viewModel.primaryAccountUsernameListener}"
                         linphone:defaultValue="@{viewModel.primaryAccountUsername}"
                         linphone:inputType="@{InputType.TYPE_CLASS_TEXT}"
-                        android:visibility="@{viewModel.accounts.empty ? View.VISIBLE : View.GONE}"/>
+                        android:visibility="gone"/>
 
                     <TextView
                         style="@style/settings_category_font"

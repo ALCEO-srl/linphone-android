@@ -24,8 +24,10 @@ import android.view.View
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.ViewModelProvider
 import org.linphone.R
+import org.linphone.activities.main.MainActivity
 import org.linphone.activities.main.settings.viewmodels.AccountSettingsViewModel
 import org.linphone.activities.main.settings.viewmodels.AccountSettingsViewModelFactory
+import org.linphone.activities.navigateToDialer
 import org.linphone.activities.navigateToPhoneLinking
 import org.linphone.core.tools.Log
 import org.linphone.databinding.SettingsAccountFragmentBinding
@@ -80,7 +82,9 @@ class AccountSettingsFragment : GenericSettingFragment<SettingsAccountFragmentBi
         ) {
             it.consume {
                 sharedViewModel.accountRemoved.value = true
-                goBack()
+                // dms: back to the dialer, the settings list has nothing useful left without the account
+                val activity = requireActivity()
+                if (activity is MainActivity) activity.navigateToDialer(null) else goBack()
             }
         }
 

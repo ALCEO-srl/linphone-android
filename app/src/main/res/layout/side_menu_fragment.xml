@@ -36,11 +36,12 @@
         android:clickable="true"
         android:background="?attr/backgroundColor">
 
+        <!-- dms: without the account the header is hidden, the assistant entry is shown instead -->
         <RelativeLayout
             android:id="@+id/main_account"
             android:onClick="@{() -> viewModel.defaultAccountViewModel.accountsSettingsListener.onAccountClicked(viewModel.defaultAccountViewModel.identity)}"
             android:enabled="@{viewModel.defaultAccountFound}"
-            android:visibility="@{viewModel.showAccounts ? View.VISIBLE : View.GONE}"
+            android:visibility="@{viewModel.showAccounts &amp;&amp; viewModel.defaultAccountFound ? View.VISIBLE : View.GONE, default=gone}"
             android:layout_width="match_parent"
             android:layout_height="70dp"
             android:background="?attr/lightToolbarBackgroundColor">
@@ -68,10 +69,34 @@
                 android:src="@drawable/avatar_border"
                 android:visibility="@{viewModel.defaultAccountFound ? View.VISIBLE : View.GONE}" />
 
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/default_account_switch"
+                android:visibility="@{viewModel.defaultAccountFound ? View.VISIBLE : View.GONE, default=gone}"
+                android:checked="@{!viewModel.defaultAccountViewModel.disable}"
+                android:contentDescription="@string/content_description_account_enabled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="10dp" />
+
+            <ImageView
+                android:id="@+id/default_account_led"
+                android:background="@drawable/led_background"
+                android:src="@{viewModel.defaultAccountViewModel.iconResource, default=@drawable/led_not_registered}"
+                android:contentDescription="@{viewModel.defaultAccountViewModel.iconContentDescription}"
+                android:layout_width="20dp"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@id/default_account_switch"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="5dp"
+                android:padding="2dp" />
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_toRightOf="@id/avatar_border"
+                android:layout_toLeftOf="@id/default_account_led"
                 android:gravity="center_vertical"
                 android:orientation="vertical">
 
@@ -102,18 +127,6 @@
                     android:layout_height="wrap_content" />
 
             </LinearLayout>
-
-            <ImageView
-                android:background="@drawable/led_background"
-                android:src="@{viewModel.defaultAccountViewModel.iconResource, default=@drawable/led_not_registered}"
-                android:contentDescription="@{viewModel.defaultAccountViewModel.iconContentDescription}"
-                android:layout_width="20dp"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentRight="true"
-                android:layout_marginTop="10dp"
-                android:layout_marginRight="10dp"
-                android:padding="2dp" />
 
             <View
                 android:layout_width="match_parent"

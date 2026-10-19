@@ -681,6 +681,7 @@
     <string name="account_settings_default_title">Usato come predefinito</string>
     <string name="account_settings_link_phone_number_title">Collega il tuo account</string>
     <string name="account_settings_delete_title">Elimina</string>
+    <string name="account_settings_delete_disable_first">Prima disattiva l\'account</string>
     <string name="account_settings_advanced_title">Avanzate</string>
     <string name="account_settings_push_notification_title">Permetti notifica push</string>
     <string name="account_settings_push_notification_summary">Non termimerà la registrazione della configurazione proxy</string>
@@ -808,6 +809,9 @@
     <string name="content_description_confirm_contact_edit">Salvare le modifiche</string>
     <string name="content_description_change_contact_picture">Cambia l\'immagine del contatto</string>
     <string name="content_description_change_own_picture">Modifica la propria immagine</string>
+    <string name="content_description_account_enabled">Account attivo</string>
+    <string name="side_menu_disable_account_dialog">Disattivando l\'account non riceverai più chiamate né messaggi finché non lo riattivi. Vuoi continuare?</string>
+    <string name="side_menu_disable_account_confirm">Disattiva</string>
     <string name="content_description_show_call_details">Vai ai dettagli della chiamata</string>
     <string name="content_description_exit_edition_mode" >Esci dalla modalità di edizione</string>
     <string name="content_description_select_all">Selezionare tutte le voci dell\'elenco</string>

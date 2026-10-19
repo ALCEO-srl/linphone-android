@@ -20,6 +20,7 @@
 package org.linphone.activities.main.sidemenu.fragments
 
 import android.app.Activity
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
@@ -35,13 +36,16 @@ import org.linphone.R
 import org.linphone.activities.*
 import org.linphone.activities.assistant.AssistantActivity
 import org.linphone.activities.main.settings.SettingListenerStub
+import org.linphone.activities.main.settings.viewmodels.AccountSettingsViewModel
 import org.linphone.activities.main.sidemenu.viewmodels.SideMenuViewModel
+import org.linphone.activities.main.viewmodels.DialogViewModel
 import org.linphone.activities.navigateToAbout
 import org.linphone.activities.navigateToAccountSettings
 import org.linphone.activities.navigateToRecordings
 import org.linphone.activities.navigateToSettings
 import org.linphone.core.tools.Log
 import org.linphone.databinding.SideMenuFragmentBinding
+import org.linphone.utils.DialogUtils
 import org.linphone.utils.Event
 import org.linphone.utils.FileUtils
 import org.linphone.utils.PermissionHelper
@@ -89,6 +93,20 @@ class SideMenuFragment : GenericFragment<SideMenuFragmentBinding>() {
             pickFile()
         }
 
+        // dms: the account can be disabled from the menu, with a confirmation since it will no longer be reachable
+        binding.defaultAccountSwitch.setOnClickListener {
+            val accountViewModel = viewModel.defaultAccountViewModel.value ?: return@setOnClickListener
+            if (binding.defaultAccountSwitch.isChecked) {
+                Log.i("[Side Menu] Enabling default account")
+                accountViewModel.disableListener.onBoolValueChanged(false)
+                accountViewModel.disable.value = false
+            } else {
+                // Stays on until the user confirms
+                binding.defaultAccountSwitch.isChecked = true
+                showDisableAccountDialog(accountViewModel)
+            }
+        }
+
         binding.setAssistantClickListener {
             sharedViewModel.toggleDrawerEvent.value = Event(true)
             startActivity(Intent(context, AssistantActivity::class.java))
@@ -122,6 +140,28 @@ class SideMenuFragment : GenericFragment<SideMenuFragmentBinding>() {
             coreContext.notificationsManager.stopForegroundNotification()
             coreContext.stop()
         }
+    }
+
+    private fun showDisableAccountDialog(accountViewModel: AccountSettingsViewModel) {
+        val dialogViewModel = DialogViewModel(getString(R.string.side_menu_disable_account_dialog))
+        val dialog: Dialog = DialogUtils.getDialog(requireContext(), dialogViewModel)
+
+        dialogViewModel.showCancelButton {
+            dialog.dismiss()
+        }
+
+        dialogViewModel.showDeleteButton(
+            {
+                Log.i("[Side Menu] Disabling default account")
+                accountViewModel.disableListener.onBoolValueChanged(true)
+                // The registration state may not change (account not registered), update the switch anyway
+                accountViewModel.disable.value = true
+                dialog.dismiss()
+            },
+            getString(R.string.side_menu_disable_account_confirm)
+        )
+
+        dialog.show()
     }
 
     @Deprecated("Deprecated in Java")

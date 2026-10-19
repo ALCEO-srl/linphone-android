@@ -138,6 +138,8 @@
                 <include
                     layout="@layout/settings_widget_basic"
                     linphone:title="@{@string/account_settings_delete_title}"
+                    linphone:subtitle="@{viewModel.deleteEnabled ? `` : @string/account_settings_delete_disable_first}"
+                    linphone:enabled="@{viewModel.deleteEnabled}"
                     linphone:listener="@{viewModel.deleteListener}"/>
 
                 <TextView

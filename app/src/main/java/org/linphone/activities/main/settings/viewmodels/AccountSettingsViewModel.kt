@@ -209,9 +209,19 @@ class AccountSettingsViewModel(val account: Account) : GenericSettingsViewModel(
             val params = account.params.clone()
             params.isRegisterEnabled = !newValue
             account.params = params
+            updateDeleteEnabled(newValue)
         }
     }
     val disable = MutableLiveData<Boolean>()
+
+    // dms: the account can only be deleted once disabled and unregistered, otherwise the registration (with the push
+    // parameters) stays on the server until it expires
+    val deleteEnabled = MutableLiveData<Boolean>()
+
+    private fun updateDeleteEnabled(disabled: Boolean) {
+        deleteEnabled.value = disabled && account.state != RegistrationState.Ok &&
+            account.state != RegistrationState.Progress
+    }
 
     val isDefaultListener = object : SettingListenerStub() {
         override fun onBoolValueChanged(newValue: Boolean) {
@@ -238,6 +248,10 @@ class AccountSettingsViewModel(val account: Account) : GenericSettingsViewModel(
 
     val deleteListener = object : SettingListenerStub() {
         override fun onClicked() {
+            if (deleteEnabled.value != true) {
+                Log.w("[Account Settings] Account must be disabled and unregistered before being deleted")
+                return
+            }
             accountToDelete = account
 
             val registered = account.state == RegistrationState.Ok
@@ -512,6 +526,7 @@ class AccountSettingsViewModel(val account: Account) : GenericSettingsViewModel(
         userId.value = account.findAuthInfo()?.userid
         domain.value = params.identityAddress?.domain
         disable.value = !params.isRegisterEnabled
+        updateDeleteEnabled(!params.isRegisterEnabled)
         pushNotification.value = params.pushNotificationAllowed
         pushNotificationsAvailable.value = core.isPushNotificationAvailable
         proxy.value = params.serverAddress?.asStringUriOnly()

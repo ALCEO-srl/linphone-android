@@ -694,6 +694,7 @@
     <string name="account_settings_default_title">Used as default</string>
     <string name="account_settings_link_phone_number_title">Link your account</string>
     <string name="account_settings_delete_title">Delete</string>
+    <string name="account_settings_delete_disable_first">Disable the account first</string>
     <string name="account_settings_advanced_title">Advanced</string>
     <string name="account_settings_push_notification_title">Allow push notification</string>
     <string name="account_settings_push_notification_summary">Proxy config won\'t unregister</string>
@@ -833,6 +834,9 @@
     <string name="content_description_confirm_contact_edit">Save changes</string>
     <string name="content_description_change_contact_picture">Change contact picture</string>
     <string name="content_description_change_own_picture">Change own picture</string>
+    <string name="content_description_account_enabled">Account enabled</string>
+    <string name="side_menu_disable_account_dialog">If you disable the account you will no longer receive calls or messages until you enable it again. Continue?</string>
+    <string name="side_menu_disable_account_confirm">Disable</string>
     <string name="content_description_show_call_details">Go to call details</string>
     <string name="content_description_exit_edition_mode">Quit edition mode</string>
     <string name="content_description_select_all">Select all items in list</string>
