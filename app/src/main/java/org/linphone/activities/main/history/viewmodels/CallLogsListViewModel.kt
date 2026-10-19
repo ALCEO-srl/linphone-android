@@ -50,6 +50,19 @@ class CallLogsListViewModel : ViewModel() {
             Log.i("[onCallLogUpdated] callid=${log.callId} status=${log.status} error=${log.errorInfo?.phrase}")
             // dms updateCallLogs() // dms calllog
         }
+
+        // dms: the call log is emptied when the account is disabled and reloaded when it registers again
+        override fun onAccountRegistrationStateChanged(
+            core: Core,
+            account: Account,
+            state: RegistrationState?,
+            message: String
+        ) {
+            if (state == RegistrationState.Ok || state == RegistrationState.Cleared) {
+                // The fetch is dispatched after the CoreContext listener, which tracks the registered account
+                updateCallLogs()
+            }
+        }
     }
 
     private val contactsUpdatedListener = object : ContactsUpdatedListenerStub() {

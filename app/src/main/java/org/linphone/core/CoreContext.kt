@@ -163,6 +163,7 @@ class CoreContext(
 
                 if (lastAccountIdRegistered?.length == 0 || lastAccountIdRegistered != account.params.identityAddress?.asStringUriOnly()) {
                     lastAccountIdRegistered = account.params.identityAddress?.asStringUriOnly()
+                    bcsDirectoryItems = null // dms: directory of the new account
                     val username = account.params.identityAddress?.username ?: "nouser"
                     val domain = account.params.identityAddress?.domain ?: "nodomain"
                     val authInfo = account.findAuthInfo()
@@ -181,6 +182,7 @@ class CoreContext(
                 if (lastAccountIdRegistered?.length != 0) {
                     Log.i("[Context] Account Removing buddies")
                     lastAccountIdRegistered = ""
+                    bcsDirectoryItems = null // dms: directory no longer available with the account disabled
                     disableSubscriptions()
                     contactsManager.clearFriends()
                 }
@@ -1175,6 +1177,8 @@ class CoreContext(
     }
 
     public suspend fun fetchDirectory(query: String): List<DirectoryItem> {
+        // dms: the web service still has the credentials, the directory is only shown while the account is registered
+        if (lastAccountIdRegistered.isNullOrEmpty()) return emptyList()
 
         if (bcsDirectoryItems == null) {
             try {
@@ -1358,6 +1362,8 @@ class CoreContext(
     }
     public suspend fun fetchCallLog(): Array<CallLog> {
         var CallLogs = emptyArray<CallLog>()
+        // dms: the web service still has the credentials, the call log is only shown while the account is registered
+        if (lastAccountIdRegistered.isNullOrEmpty()) return CallLogs
         try {
             val CallReportResponse = bcsWsHandler?.fetchCallReport(500, 0)
 

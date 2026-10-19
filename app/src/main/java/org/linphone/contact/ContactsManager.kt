@@ -298,6 +298,8 @@ class ContactsManager(private val context: Context) {
                 fl.removeFriend(friend)
             }
         }
+        // dms: the contacts list and its search results are only refreshed when notified
+        notifyListeners()
     }
 
     fun createFriendFromJsonBuddyList(userConf: UserConf) {
@@ -328,6 +330,8 @@ class ContactsManager(private val context: Context) {
                 fl.addLocalFriend(friend)
             }
         }
+        // dms: the contacts list and its search results are only refreshed when notified
+        notifyListeners()
     }
 }
 

@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ProgressBar
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,11 +19,33 @@ import org.linphone.R
 import org.linphone.activities.GenericFragment
 import org.linphone.activities.main.directory.adapters.DirectoryAdapter
 import org.linphone.activities.main.directory.viewmodels.DirectoryViewModel
+import org.linphone.core.Account
+import org.linphone.core.Core
+import org.linphone.core.CoreListenerStub
+import org.linphone.core.RegistrationState
 import org.linphone.databinding.DirectoryFragmentBinding
 
 class DirectoryFragment : GenericFragment<DirectoryFragmentBinding>() {
     private val viewModel: DirectoryViewModel by navGraphViewModels(R.id.directoryFragment)
     private lateinit var adapter: DirectoryAdapter
+    private lateinit var searchField: EditText
+
+    // dms: the directory is emptied when the account is disabled and reloaded when it registers again
+    private val coreListener = object : CoreListenerStub() {
+        override fun onAccountRegistrationStateChanged(
+            core: Core,
+            account: Account,
+            state: RegistrationState?,
+            message: String
+        ) {
+            if (state == RegistrationState.Ok || state == RegistrationState.Cleared) {
+                // Dispatched after the CoreContext listener, which updates the directory cache
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                    viewModel.updateDirectory(coreContext.fetchDirectory(searchField.text.toString().trim()))
+                }
+            }
+        }
+    }
 
     override fun getLayoutId(): Int = R.layout.directory_fragment
 
@@ -33,7 +56,7 @@ class DirectoryFragment : GenericFragment<DirectoryFragmentBinding>() {
         binding.sharedMainViewModel = sharedViewModel
         binding.viewModel = viewModel
 
-        val searchField: EditText = view.findViewById(R.id.searchField)
+        searchField = view.findViewById(R.id.searchField)
         searchField.setText("")
         CoroutineScope(Dispatchers.Main).launch {
             try {
@@ -84,11 +107,18 @@ class DirectoryFragment : GenericFragment<DirectoryFragmentBinding>() {
             }
         )
 
+        coreContext.core.addListener(coreListener)
+
         viewModel.isLoading.observe(
             viewLifecycleOwner,
             { isLoading ->
                 progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
             }
         )
+    }
+
+    override fun onDestroyView() {
+        coreContext.core.removeListener(coreListener)
+        super.onDestroyView()
     }
 }
