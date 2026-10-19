@@ -88,6 +88,12 @@ android {
         versionCode appVersionCode
         versionName "${project.version}"
         applicationId getPackageName()
+
+        // dms: linphone-sdk is built for arm64-v8a only, Crashlytics NDK alone added the other ABIs: Play
+        // installed the app on 32 bit / x86 devices, where it crashed at start without the linphone libraries
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
     }
 
     compileOptions {
