@@ -1,7 +1,3 @@
-# dms: AGP 9 no longer accepts proguard-android.txt (which had -dontoptimize), keep R8 optimizations off
-# as with AGP 8 until the app has been tested with them
--dontoptimize
-
 # If your project uses WebView with JS, uncomment the following
 # and specify the fully qualified class name to the JavaScript interface
 # class:
@@ -23,6 +19,11 @@
 # (onStart, onSaveInstanceState...) and so every override of them, in any library Fragment.
 -keep public class org.linphone.** extends androidx.fragment.app.Fragment { public <init>(); }
 -dontwarn com.google.errorprone.annotations.Immutable
+
+# dms: Firebase creates its registrars by name with the no-arg constructor (ComponentDiscovery), its own rule keeps
+# only the class: with the R8 strict full mode keep rules (AGP 9) the constructor was removed and the app crashed at
+# start ("FirebaseCrashlytics component is not present")
+-keep class * implements com.google.firebase.components.ComponentRegistrar { <init>(); }
 
 -keepattributes *Annotation*
 

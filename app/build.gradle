@@ -4,8 +4,8 @@ plugins {
     id 'com.android.legacy-kapt'
 }
 
-def appVersionName = "5.2.7"
-def appVersionCode = 50016
+def appVersionName = "5.2.8"
+def appVersionCode = 50017
 
 static def getPackageName() {
     return "com.alceo.bcsphone"
@@ -120,6 +120,7 @@ android {
     buildTypes {
         release {
             minifyEnabled true
+            shrinkResources true
             signingConfig = signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 

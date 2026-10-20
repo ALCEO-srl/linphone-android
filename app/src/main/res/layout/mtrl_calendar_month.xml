@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- dms: replaces the Material layout of the same name. The original one uses MaterialCalendarGridView, so
-AAPT keeps it and R8 keeps with it MaterialDatePicker and EdgeToEdgeUtils, which use the deprecated
-Window.setStatusBarColor / setNavigationBarColor (Play Console warning). The app doesn't use the Material date
-picker. To remove (with the -v26 copy) when shrinkResources is enabled. -->
-<View xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/month_grid"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content" />
