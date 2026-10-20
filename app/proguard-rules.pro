@@ -18,7 +18,6 @@
 # setNavigationBarColor (Play Console warning). With { *; } R8 also keeps the inherited Fragment methods
 # (onStart, onSaveInstanceState...) and so every override of them, in any library Fragment.
 -keep public class org.linphone.** extends androidx.fragment.app.Fragment { public <init>(); }
--dontwarn com.google.errorprone.annotations.Immutable
 
 # dms: Firebase creates its registrars by name with the no-arg constructor (ComponentDiscovery), its own rule keeps
 # only the class: with the R8 strict full mode keep rules (AGP 9) the constructor was removed and the app crashed at

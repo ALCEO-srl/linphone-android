@@ -1530,11 +1530,7 @@ class CoreContext(
         fun activateVFS() {
             try {
                 Log.i("[Context] Activating VFS")
-                val preferences = corePreferences.encryptedSharedPreferences
-                if (preferences == null) {
-                    Log.e("[Context] Can't get encrypted SharedPreferences, can't init VFS")
-                    return
-                }
+                val preferences = corePreferences.vfsSharedPreferences
 
                 if (preferences.getString(VFS_IV, null) == null) {
                     generateSecretKey()

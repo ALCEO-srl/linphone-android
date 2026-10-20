@@ -214,7 +214,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.5.1' // dms
     implementation 'androidx.media:media:1.6.0'
-    implementation "androidx.security:security-crypto-ktx:1.1.0-alpha03"
     implementation "androidx.window:window:1.0.0"
 
     def nav_version = "2.5.3"

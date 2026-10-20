@@ -21,12 +21,10 @@ package org.linphone.core
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.security.KeyStoreException
+import java.security.KeyStore
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.compatibility.Compatibility
 import org.linphone.core.tools.Log
@@ -44,44 +42,40 @@ class CorePreferences constructor(private val context: Context) {
     companion object {
         const val OVERLAY_CLICK_SENSITIVITY = 10
 
-        private const val encryptedSharedPreferencesFile = "encrypted.pref"
+        private const val vfsSharedPreferencesFile = "vfs"
     }
 
-    val encryptedSharedPreferences: SharedPreferences? by lazy {
-        val masterKey: MasterKey = MasterKey.Builder(
-            context,
-            MasterKey.DEFAULT_MASTER_KEY_ALIAS
-        ).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
-        try {
-            EncryptedSharedPreferences.create(
-                context, encryptedSharedPreferencesFile, masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
-        } catch (kse: KeyStoreException) {
-            Log.e("[VFS] Keystore exception: $kse")
-            null
-        } catch (e: Exception) {
-            Log.e("[VFS] Exception: $e")
-            null
+    // dms: the VFS key is already encrypted with an AndroidKeyStore key (CoreContext.encryptToken), the second layer of
+    // androidx.security:security-crypto (deprecated, never left alpha) is replaced by plain private preferences; its
+    // file and master key are removed (VFS was never enabled in BcsPhone, nothing to migrate)
+    val vfsSharedPreferences: SharedPreferences by lazy {
+        if (File(context.dataDir, "shared_prefs/encrypted.pref.xml").exists()) {
+            Log.i("[VFS] Removing the old security-crypto preferences and master key")
+            context.deleteSharedPreferences("encrypted.pref")
+            try {
+                val keyStore = KeyStore.getInstance("AndroidKeyStore")
+                keyStore.load(null)
+                if (keyStore.containsAlias("_androidx_security_master_key_")) {
+                    keyStore.deleteEntry("_androidx_security_master_key_")
+                }
+            } catch (e: Exception) {
+                Log.e("[VFS] Can't remove the old security-crypto master key: $e")
+            }
         }
+        context.getSharedPreferences(vfsSharedPreferencesFile, Context.MODE_PRIVATE)
     }
 
     var vfsEnabled: Boolean
-        get() = encryptedSharedPreferences?.getBoolean("vfs_enabled", false) ?: false
+        get() = vfsSharedPreferences.getBoolean("vfs_enabled", false)
         set(value) {
-            val preferences = encryptedSharedPreferences
-            if (preferences == null) {
-                Log.e("[VFS] Failed to get encrypted SharedPreferences")
-                return
-            }
+            val preferences = vfsSharedPreferences
 
             if (!value && preferences.getBoolean("vfs_enabled", false)) {
                 Log.w("[VFS] It is not possible to disable VFS once it has been enabled")
                 return
             }
 
-            preferences.edit().putBoolean("vfs_enabled", value)?.apply()
+            preferences.edit().putBoolean("vfs_enabled", value).apply()
             // When VFS is enabled we disable logcat output for linphone logs
             // TODO: decide if we do it
             // logcatLogsOutput = false

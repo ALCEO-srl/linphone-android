@@ -153,8 +153,9 @@
                     linphone:defaultValue="@{viewModel.remoteProvisioningUrl}"
                     linphone:inputType="@{InputType.TYPE_TEXT_VARIATION_URI}"/>
 
+                <!-- dms: VFS not used by BcsPhone (chat history on bcsws, no files saved) -->
                 <include
-                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
+                    android:visibility="gone"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/advanced_settings_vfs_title}"
                     linphone:subtitle="@{@string/advanced_settings_vfs_summary}"
