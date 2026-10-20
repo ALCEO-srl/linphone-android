@@ -231,8 +231,6 @@ dependencies {
     // https://github.com/google/flexbox-layout/blob/main/LICENSE Apache v2.0
     implementation 'com.google.android.flexbox:flexbox:3.0.0'
 
-    implementation 'androidx.emoji:emoji:1.1.0'
-    implementation 'androidx.emoji:emoji-bundled:1.1.0'
 
     //dms ********
     implementation 'com.google.code.gson:gson:2.10.1'

@@ -28,7 +28,6 @@ import android.os.Bundle
 import android.text.format.Formatter.formatShortFileSize
 import android.util.TypedValue
 import androidx.core.content.res.ResourcesCompat
-import androidx.emoji.text.EmojiCompat
 import androidx.media.AudioAttributesCompat
 import androidx.media.AudioFocusRequestCompat
 import androidx.media.AudioManagerCompat
@@ -68,25 +67,11 @@ class AppUtils {
             var initials = ""
             var characters = 0
 
-            val emoji = try {
-                EmojiCompat.get()
-            } catch (ise: IllegalStateException) {
-                Log.e("[App Utils] Can't get EmojiCompat: $ise")
-                null
-            }
-
             for (i in split.indices) {
                 if (split[i].isNotEmpty()) {
-                    try {
-                        if (emoji?.hasEmojiGlyph(split[i]) == true) {
-                            initials += emoji.process(split[i])
-                        } else {
-                            initials += split[i][0]
-                        }
-                    } catch (ise: IllegalStateException) {
-                        Log.e("[App Utils] Can't call hasEmojiGlyph: $ise")
-                        initials += split[i][0]
-                    }
+                    // dms: first code point instead of first char, so an emoji (surrogate pair) is not cut in half;
+                    // replaces androidx.emoji (deprecated) and its 10 MB bundled font
+                    initials += split[i].substring(0, split[i].offsetByCodePoints(0, 1))
 
                     characters += 1
                     if (characters >= limit) break
