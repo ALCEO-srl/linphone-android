@@ -695,6 +695,7 @@
     <string name="account_settings_link_phone_number_title">Link your account</string>
     <string name="account_settings_delete_title">Delete</string>
     <string name="account_settings_delete_disable_first">Disable the account first</string>
+    <string name="account_settings_delete_dialog">Deleting the account removes its credentials from this phone. To use it again you will have to set it up with the assistant. Continue?</string>
     <string name="account_settings_advanced_title">Advanced</string>
     <string name="account_settings_push_notification_title">Allow push notification</string>
     <string name="account_settings_push_notification_summary">Proxy config won\'t unregister</string>

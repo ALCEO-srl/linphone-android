@@ -246,36 +246,45 @@ class AccountSettingsViewModel(val account: Account) : GenericSettingsViewModel(
         accountRemovedEvent.value = Event(true)
     }
 
+    // dms: the fragment asks for a confirmation, then calls deleteConfirmed()
+    val deleteRequestedEvent: MutableLiveData<Event<Boolean>> by lazy {
+        MutableLiveData<Event<Boolean>>()
+    }
+
     val deleteListener = object : SettingListenerStub() {
         override fun onClicked() {
             if (deleteEnabled.value != true) {
                 Log.w("[Account Settings] Account must be disabled and unregistered before being deleted")
                 return
             }
-            accountToDelete = account
+            deleteRequestedEvent.value = Event(true)
+        }
+    }
 
-            val registered = account.state == RegistrationState.Ok
-            waitForUnregister.value = registered
+    fun deleteConfirmed() {
+        accountToDelete = account
 
-            if (core.defaultAccount == account) {
-                Log.i("[Account Settings] Account was default, let's look for a replacement")
-                for (accountIterator in core.accountList) {
-                    if (account != accountIterator) {
-                        core.defaultAccount = accountIterator
-                        Log.i("[Account Settings] New default account is $accountIterator")
-                        break
-                    }
+        val registered = account.state == RegistrationState.Ok
+        waitForUnregister.value = registered
+
+        if (core.defaultAccount == account) {
+            Log.i("[Account Settings] Account was default, let's look for a replacement")
+            for (accountIterator in core.accountList) {
+                if (account != accountIterator) {
+                    core.defaultAccount = accountIterator
+                    Log.i("[Account Settings] New default account is $accountIterator")
+                    break
                 }
             }
+        }
 
-            val params = account.params.clone()
-            params.isRegisterEnabled = false
-            account.params = params
+        val params = account.params.clone()
+        params.isRegisterEnabled = false
+        account.params = params
 
-            if (!registered) {
-                Log.w("[Account Settings] Account isn't registered, don't unregister before removing it")
-                deleteAccount(account)
-            }
+        if (!registered) {
+            Log.w("[Account Settings] Account isn't registered, don't unregister before removing it")
+            deleteAccount(account)
         }
     }
 

@@ -19,6 +19,7 @@
  */
 package org.linphone.activities.main.settings.fragments
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.View
 import androidx.core.view.doOnPreDraw
@@ -27,10 +28,12 @@ import org.linphone.R
 import org.linphone.activities.main.MainActivity
 import org.linphone.activities.main.settings.viewmodels.AccountSettingsViewModel
 import org.linphone.activities.main.settings.viewmodels.AccountSettingsViewModelFactory
+import org.linphone.activities.main.viewmodels.DialogViewModel
 import org.linphone.activities.navigateToDialer
 import org.linphone.activities.navigateToPhoneLinking
 import org.linphone.core.tools.Log
 import org.linphone.databinding.SettingsAccountFragmentBinding
+import org.linphone.utils.DialogUtils
 import org.linphone.utils.Event
 
 class AccountSettingsFragment : GenericSettingFragment<SettingsAccountFragmentBinding>() {
@@ -88,6 +91,14 @@ class AccountSettingsFragment : GenericSettingFragment<SettingsAccountFragmentBi
             }
         }
 
+        viewModel.deleteRequestedEvent.observe(
+            viewLifecycleOwner
+        ) {
+            it.consume {
+                showDeleteAccountDialog()
+            }
+        }
+
         viewModel.accountDefaultEvent.observe(
             viewLifecycleOwner
         ) {
@@ -100,5 +111,26 @@ class AccountSettingsFragment : GenericSettingFragment<SettingsAccountFragmentBi
             // Notifies fragment is ready to be drawn
             sharedViewModel.accountSettingsFragmentOpenedEvent.value = Event(true)
         }
+    }
+
+    // dms: deleting the account removes its credentials, it can only be added back with the assistant
+    private fun showDeleteAccountDialog() {
+        val dialogViewModel = DialogViewModel(getString(R.string.account_settings_delete_dialog))
+        val dialog: Dialog = DialogUtils.getDialog(requireContext(), dialogViewModel)
+
+        dialogViewModel.showCancelButton {
+            dialog.dismiss()
+        }
+
+        dialogViewModel.showDeleteButton(
+            {
+                Log.i("[Account Settings] Account deletion confirmed")
+                viewModel.deleteConfirmed()
+                dialog.dismiss()
+            },
+            getString(R.string.account_settings_delete_title)
+        )
+
+        dialog.show()
     }
 }

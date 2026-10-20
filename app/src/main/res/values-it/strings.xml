@@ -682,6 +682,7 @@
     <string name="account_settings_link_phone_number_title">Collega il tuo account</string>
     <string name="account_settings_delete_title">Elimina</string>
     <string name="account_settings_delete_disable_first">Prima disattiva l\'account</string>
+    <string name="account_settings_delete_dialog">Eliminando l\'account verranno cancellate le credenziali da questo telefono. Per usarlo di nuovo dovrai riconfigurarlo con l\'assistente. Vuoi continuare?</string>
     <string name="account_settings_advanced_title">Avanzate</string>
     <string name="account_settings_push_notification_title">Permetti notifica push</string>
     <string name="account_settings_push_notification_summary">Non termimerà la registrazione della configurazione proxy</string>
