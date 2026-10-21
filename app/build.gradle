@@ -248,7 +248,7 @@ dependencies {
     implementation("io.coil-kt:coil-svg:$coil_version")
     implementation("io.coil-kt:coil-video:$coil_version")
 
-    implementation platform('com.google.firebase:firebase-bom:33.6.0')
+    implementation platform('com.google.firebase:firebase-bom:35.0.2')
     if (crashlyticsEnabled) {
         implementation 'com.google.firebase:firebase-crashlytics-ndk'
     } else {
