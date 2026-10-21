@@ -2,8 +2,8 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
+        mavenCentral()
         maven { url = "https://plugins.gradle.org/m2/" }
-        maven { url = "https://www.jitpack.io" } // for com.github.chrisbanes:PhotoView
 
         maven {
             name = "local linphone-sdk maven repository"

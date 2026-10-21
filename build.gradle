@@ -5,7 +5,6 @@ buildscript {
         google()
         mavenCentral()
         maven { url = "https://plugins.gradle.org/m2/" }
-        maven { url = "https://www.jitpack.io" } // per PhotoView o altre librerie GitHub
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:9.4.1' // dms: AGP 9.4 needed for compileSdk 37

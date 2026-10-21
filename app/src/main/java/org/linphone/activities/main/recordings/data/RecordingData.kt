@@ -51,6 +51,8 @@ class RecordingData(val path: String, private val recordingListener: RecordingLi
     val formattedPosition = MutableLiveData<String>()
     val isPlaying = MutableLiveData<Boolean>()
 
+    // dms: ticker is marked obsolete but still supported by kotlinx.coroutines
+    @OptIn(ObsoleteCoroutinesApi::class)
     private val tickerChannel = ticker(1000, 1000)
 
     private lateinit var player: Player
