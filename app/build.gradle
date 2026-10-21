@@ -285,6 +285,8 @@ if (crashlyticsEnabled) {
 
         assembleReleaseWithCrashlytics.finalizedBy(uploadCrashlyticsSymbolFileReleaseWithCrashlytics)
         packageReleaseWithCrashlytics.finalizedBy(uploadCrashlyticsSymbolFileReleaseWithCrashlytics)
+        // dms: the AAB (Build > Generate Signed Bundle) only uploaded the R8 mapping, not the native symbols
+        bundleReleaseWithCrashlytics.finalizedBy(uploadCrashlyticsSymbolFileReleaseWithCrashlytics)
     }
 }
 
