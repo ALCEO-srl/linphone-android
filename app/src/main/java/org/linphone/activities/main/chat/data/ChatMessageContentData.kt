@@ -19,13 +19,13 @@
  */
 package org.linphone.activities.main.chat.data
 
+import android.media.AudioFocusRequest
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.UnderlineSpan
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
-import androidx.media.AudioFocusRequestCompat
 import java.io.BufferedReader
 import java.io.FileReader
 import java.lang.StringBuilder
@@ -97,7 +97,7 @@ class ChatMessageContentData(
 
     private var isFileEncrypted: Boolean = false
 
-    private var voiceRecordAudioFocusRequest: AudioFocusRequestCompat? = null
+    private var voiceRecordAudioFocusRequest: AudioFocusRequest? = null
 
     private lateinit var voiceRecordingPlayer: Player
     private val playerListener = PlayerListener {

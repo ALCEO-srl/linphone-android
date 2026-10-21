@@ -19,9 +19,9 @@
  */
 package org.linphone.activities.main.recordings.viewmodels
 
+import android.media.AudioFocusRequest
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.media.AudioFocusRequestCompat
 import kotlin.collections.ArrayList
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.activities.main.recordings.data.RecordingData
@@ -39,7 +39,7 @@ class RecordingsViewModel : ViewModel() {
         MutableLiveData<Event<String>>()
     }
 
-    private var recordingPlayingAudioFocusRequest: AudioFocusRequestCompat? = null
+    private var recordingPlayingAudioFocusRequest: AudioFocusRequest? = null
 
     private val recordingListener = object : RecordingData.RecordingListener {
         override fun onPlayingStarted(videoAvailable: Boolean) {

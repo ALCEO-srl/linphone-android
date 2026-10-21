@@ -25,7 +25,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import org.linphone.R
 import org.linphone.activities.main.MainActivity
@@ -123,7 +122,7 @@ class AdvancedSettingsFragment : GenericSettingFragment<SettingsAdvancedFragment
                 intent.addCategory(Intent.CATEGORY_DEFAULT)
                 intent.data = Uri.parse("package:${requireContext().packageName}")
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
-                ContextCompat.startActivity(requireContext(), intent, null)
+                startActivity(intent)
             }
         }
     }

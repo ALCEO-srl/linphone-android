@@ -19,12 +19,12 @@
  */
 package org.linphone.activities.main.chat.viewmodels
 
+import android.media.AudioFocusRequest
 import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.media.AudioFocusRequestCompat
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -103,7 +103,7 @@ class ChatMessageSendingViewModel(private val chatRoom: ChatRoom) : ViewModel() 
 
     private val recorder: Recorder
 
-    private var voiceRecordAudioFocusRequest: AudioFocusRequestCompat? = null
+    private var voiceRecordAudioFocusRequest: AudioFocusRequest? = null
 
     private lateinit var voiceRecordingPlayer: Player
     private val playerListener = PlayerListener {
