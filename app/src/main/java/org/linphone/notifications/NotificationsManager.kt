@@ -231,19 +231,9 @@ class NotificationsManager(private val context: Context) {
                 message.removeListener(this)
             }
 
-            if (state == ChatMessage.State.Delivered || state == ChatMessage.State.Displayed) {
-                val address = message.chatRoom.peerAddress.asStringUriOnly()
-                val notifiable = chatNotificationsMap[address]
-                if (notifiable != null) {
-                    if (notifiable.notificationId != id) {
-                        Log.w("[Notifications Manager] ID doesn't match: ${notifiable.notificationId} != $id")
-                    }
-                    displayReplyMessageNotification(message, notifiable)
-                } else {
-                    Log.e("[Notifications Manager] Couldn't find notification for chat room $address")
-                    cancel(id, CHAT_TAG)
-                }
-            } else if (state == ChatMessage.State.NotDelivered) {
+            // dms: no reply notification once delivered: replying marks the chat room as read, which already
+            // dismissed the notification, and posting it again on the chat channel rang like a new message
+            if (state == ChatMessage.State.NotDelivered) {
                 Log.e("[Notifications Manager] Reply wasn't delivered")
                 cancel(id, CHAT_TAG)
             }
@@ -899,22 +889,6 @@ class NotificationsManager(private val context: Context) {
         }
 
         return notifiableMessage
-    }
-
-    private fun displayReplyMessageNotification(message: ChatMessage, notifiable: Notifiable) {
-        Log.i("[Notifications Manager] Updating message notification with reply for notification ${notifiable.notificationId}")
-
-        val text = message.contents.find { content -> content.isText }?.utf8Text ?: ""
-        val reply = NotifiableMessage(
-            text,
-            null,
-            notifiable.myself ?: LinphoneUtils.getDisplayName(message.fromAddress),
-            System.currentTimeMillis(),
-            isOutgoing = true
-        )
-        notifiable.messages.add(reply)
-
-        displayChatNotifiable(message.chatRoom, notifiable)
     }
 
     fun dismissChatNotification(room: ChatRoom): Boolean {

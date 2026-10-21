@@ -540,7 +540,8 @@ class CorePreferences constructor(private val context: Context) {
         get() = config.getBool("app", "side_menu_settings", true)
 
     val showRecordingsInSideMenu: Boolean
-        get() = config.getBool("app", "side_menu_recordings", true)
+        // dms: off by default, call recording is not available (linphone-sdk built without MKV)
+        get() = config.getBool("app", "side_menu_recordings", false)
 
     val showScheduledConferencesInSideMenu: Boolean
         get() = config.getBool("app", "side_menu_conferences", true)

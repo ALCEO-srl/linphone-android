@@ -138,8 +138,9 @@
                     linphone:listener="@{viewModel.rfc2833DtmfListener}"
                     linphone:checked="@={viewModel.rfc2833Dtmf}"/>
 
+                <!-- dms: hidden, call recording is not available (linphone-sdk built without MKV) -->
                 <include
-                    android:visibility="@{viewModel.technicianMode ? View.VISIBLE : View.GONE}"
+                    android:visibility="gone"
                     layout="@layout/settings_widget_switch"
                     linphone:title="@{@string/call_settings_auto_start_recording_title}"
                     linphone:listener="@{viewModel.autoStartCallRecordingListener}"
