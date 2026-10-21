@@ -1,4 +1,6 @@
 
+> **BcsPhone (ALCEO):** come preparare l'ambiente e compilare SDK e app: [BUILD-BCSPHONE.md](BUILD-BCSPHONE.md).
+
 [![pipeline status](https://gitlab.linphone.org/BC/public/linphone-android/badges/master/pipeline.svg)](https://gitlab.linphone.org/BC/public/linphone-android/commits/master) [![weblate status](https://weblate.linphone.org/widgets/linphone/-/linphone-android/svg-badge.svg)](https://weblate.linphone.org/engage/linphone/?utm_source=widget)
 
 Linphone is an open source softphone for voice and video over IP calling and instant messaging.

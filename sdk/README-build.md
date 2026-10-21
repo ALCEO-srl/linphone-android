@@ -1,7 +1,8 @@
 # linphone-sdk per BcsPhone Android
 
-L'app usa l'AAR di linphone-sdk 5.2 compilato in locale. `LinphoneSdkBuildDir` in `gradle.properties` punta a
-`../linphone-sdk/build`, che contiene il repository Maven locale (`maven_repository`).
+L'app usa l'AAR di linphone-sdk 5.2 compilato in locale. `LinphoneSdkBuildDir` in `gradle.properties` contiene il
+percorso assoluto di `linphone-sdk/build`, che contiene il repository Maven locale (`maven_repository`).
+La guida passo passo per un ambiente nuovo è [`BUILD-BCSPHONE.md`](../BUILD-BCSPHONE.md).
 
 ## Sorgenti
 `linphone-sdk` è il clone Belledonne `release/5.2` @2a2fbb7. Le parti modificate per BcsPhone sono pubblicate nei fork
@@ -28,7 +29,8 @@ Prima della build:
 `gitlab.linphone.org:4567/bc/public/linphone-sdk/bc-dev-android-r20:20210914_update_java11`
 (Debian stretch, NDK r20 20.0.5594570, cmake 3.20, utente `bc` uid 1000).
 
-La porta 4567 è bloccata dalla rete aziendale, quindi il `docker pull` non funziona. L'immagine è salvata in
+Il registro di Belledonne non è raggiungibile (la porta 4567 non risponde, il problema è dal loro lato), quindi il
+`docker pull` non funziona. L'immagine è salvata in
 `bc-dev-android-r20.tar`, insieme a `bc-dev-android-r25b.tar` di riserva (NDK r25b). Per caricarla:
 ```
 docker load -i bc-dev-android-r20.tar
