@@ -21,7 +21,6 @@ package org.linphone.activities
 
 import android.net.Uri
 import android.os.Bundle
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
@@ -184,7 +183,7 @@ internal fun DialerFragment.navigateToContacts(uriToAdd: String?) {
 }
 
 internal fun DialerFragment.navigateToConfigFileViewer() {
-    val bundle = bundleOf("Secure" to true)
+    val bundle = Bundle().apply { putBoolean("Secure", true) }
     findMasterNavController().navigate(
         R.id.action_global_configViewerFragment,
         bundle,
@@ -293,7 +292,7 @@ internal fun MasterChatRoomsFragment.navigateToChatRoomCreation(
     createGroupChatRoom: Boolean = false,
     slidingPane: SlidingPaneLayout
 ) {
-    val bundle = bundleOf("createGroup" to createGroupChatRoom)
+    val bundle = Bundle().apply { putBoolean("createGroup", createGroupChatRoom) }
     val navHostFragment =
         childFragmentManager.findFragmentById(R.id.chat_nav_container) as NavHostFragment
     navHostFragment.navController.navigate(
@@ -367,7 +366,7 @@ internal fun DetailChatRoomFragment.navigateToEphemeralInfo() {
 }
 
 internal fun DetailChatRoomFragment.navigateToTextFileViewer(secure: Boolean) {
-    val bundle = bundleOf("Secure" to secure)
+    val bundle = Bundle().apply { putBoolean("Secure", secure) }
     findMasterNavController().navigate(
         R.id.action_global_textViewerFragment,
         bundle,
@@ -376,7 +375,7 @@ internal fun DetailChatRoomFragment.navigateToTextFileViewer(secure: Boolean) {
 }
 
 internal fun DetailChatRoomFragment.navigateToPdfFileViewer(secure: Boolean) {
-    val bundle = bundleOf("Secure" to secure)
+    val bundle = Bundle().apply { putBoolean("Secure", secure) }
     findMasterNavController().navigate(
         R.id.action_global_pdfViewerFragment,
         bundle,
@@ -385,7 +384,7 @@ internal fun DetailChatRoomFragment.navigateToPdfFileViewer(secure: Boolean) {
 }
 
 internal fun DetailChatRoomFragment.navigateToImageFileViewer(secure: Boolean) {
-    val bundle = bundleOf("Secure" to secure)
+    val bundle = Bundle().apply { putBoolean("Secure", secure) }
     findMasterNavController().navigate(
         R.id.action_global_imageViewerFragment,
         bundle,
@@ -394,7 +393,7 @@ internal fun DetailChatRoomFragment.navigateToImageFileViewer(secure: Boolean) {
 }
 
 internal fun DetailChatRoomFragment.navigateToVideoFileViewer(secure: Boolean) {
-    val bundle = bundleOf("Secure" to secure)
+    val bundle = Bundle().apply { putBoolean("Secure", secure) }
     findMasterNavController().navigate(
         R.id.action_global_videoViewerFragment,
         bundle,
@@ -403,7 +402,7 @@ internal fun DetailChatRoomFragment.navigateToVideoFileViewer(secure: Boolean) {
 }
 
 internal fun DetailChatRoomFragment.navigateToAudioFileViewer(secure: Boolean) {
-    val bundle = bundleOf("Secure" to secure)
+    val bundle = Bundle().apply { putBoolean("Secure", secure) }
     findMasterNavController().navigate(
         R.id.action_global_audioViewerFragment,
         bundle,
@@ -499,7 +498,7 @@ internal fun MasterContactsFragment.navigateToContactEditor(
     slidingPane: SlidingPaneLayout
 ) {
     if (findNavController().currentDestination?.id == R.id.masterContactsFragment) {
-        val bundle = if (sipUriToAdd != null) bundleOf("SipUri" to sipUriToAdd) else Bundle()
+        val bundle = if (sipUriToAdd != null) Bundle().apply { putString("SipUri", sipUriToAdd) } else Bundle()
         val navHostFragment =
             childFragmentManager.findFragmentById(R.id.contacts_nav_container) as NavHostFragment
         navHostFragment.navController.navigate(
@@ -657,7 +656,7 @@ internal fun DetailCallLogFragment.navigateToDialer(args: Bundle?) {
 
 internal fun SettingsFragment.navigateToAccountSettings(identity: String) {
     if (findNavController().currentDestination?.id == R.id.settingsFragment) {
-        val bundle = bundleOf("Identity" to identity)
+        val bundle = Bundle().apply { putString("Identity", identity) }
         val navHostFragment =
             childFragmentManager.findFragmentById(R.id.settings_nav_container) as NavHostFragment
         navHostFragment.navController.navigate(
@@ -815,7 +814,7 @@ internal fun navigateToEmptySetting(navController: NavController) {
 
 internal fun ContactsSettingsFragment.navigateToLdapSettings(configIndex: Int) {
     if (findNavController().currentDestination?.id == R.id.contactsSettingsFragment) {
-        val bundle = bundleOf("LdapConfigIndex" to configIndex)
+        val bundle = Bundle().apply { putInt("LdapConfigIndex", configIndex) }
         findNavController().navigate(
             R.id.action_contactsSettingsFragment_to_ldapSettingsFragment,
             bundle,

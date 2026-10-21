@@ -170,13 +170,11 @@ class MainActivity : GenericActivity(), SnackBarActivity, NavController.OnDestin
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        if (intent != null) {
-            Log.d("[Main Activity] Found new intent")
-            handleIntentParams(intent)
-        }
+        Log.d("[Main Activity] Found new intent")
+        handleIntentParams(intent)
     }
 
     override fun onResume() {
