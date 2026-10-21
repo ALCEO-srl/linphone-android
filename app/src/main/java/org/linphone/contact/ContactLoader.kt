@@ -114,7 +114,7 @@ class ContactLoader : LoaderManager.LoaderCallbacks<Cursor> {
                     val friendsPhoneNumbers = arrayListOf<String>()
                     val friendsAddresses = arrayListOf<Address>()
                     var previousId = ""
-                    while (cursor != null && !cursor.isClosed && cursor.moveToNext()) {
+                    while (!cursor.isClosed && cursor.moveToNext()) {
                         try {
                             val id: String =
                                 cursor.getString(cursor.getColumnIndexOrThrow(ContactsContract.Data.CONTACT_ID))

@@ -89,8 +89,8 @@ class RecordingData(val path: String, private val recordingListener: RecordingLi
     init {
         val m = RECORD_PATTERN.matcher(path)
         if (m.matches() && m.groupCount() >= 2) {
-            name = m.group(1)
-            date = LinphoneUtils.getRecordingDateFromFileName(m.group(2))
+            name = m.group(1).orEmpty()
+            date = LinphoneUtils.getRecordingDateFromFileName(m.group(2).orEmpty())
         }
         isPlaying.value = false
 

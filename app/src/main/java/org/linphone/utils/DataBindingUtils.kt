@@ -726,6 +726,7 @@ fun Spinner.setInverseBindingListener(listener: InverseBindingListener) {
     }
 }
 
+@Suppress("UNCHECKED_CAST")
 @BindingAdapter("selectedValue")
 fun Spinner.setSelectedValue(value: Any?) {
     if (adapter != null) {

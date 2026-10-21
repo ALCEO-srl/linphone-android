@@ -205,15 +205,12 @@ class CoreContext(
         }
 
         private fun changeStatusToOnline(core: Core) {
-            if (core == null) return
             val model: PresenceModel = core.createPresenceModel()
             model.basicStatus = PresenceBasicStatus.Open
             core.presenceModel = model
         }
 
         private fun changeStatusToOnThePhone(core: Core) {
-            if (core == null) return
-
             if (core?.presenceModel?.firstActivity() != null) {
                 if (core?.presenceModel?.firstActivity()?.type != PresenceActivity.Type.OnThePhone) {
                     core?.presenceModel?.firstActivity()?.type = PresenceActivity.Type.OnThePhone
@@ -1109,31 +1106,29 @@ class CoreContext(
         Log.w("[ContactsListViewModel] EnableSubscriptions")
         // val core: Core = LinphoneApplication.coreContext.core
 
-        if (core != null) {
-            val friendLists = core.friendsLists
+        val friendLists = core.friendsLists
 
-            Log.w("[ContactsListViewModel] Checking friend list")
-            for (list in friendLists) {
-                val friends = list.friends
-                for (friend in friends) {
-                    for (address in friend.addresses) {
-                        if (address.isSip) {
+        Log.w("[ContactsListViewModel] Checking friend list")
+        for (list in friendLists) {
+            val friends = list.friends
+            for (friend in friends) {
+                for (address in friend.addresses) {
+                    if (address.isSip) {
+                        Log.w(
+                            "[ContactsListViewModel] Found [",
+                            address.asString(),
+                            "], checking presence status"
+                        )
+                        if (!friend.isSubscribesEnabled) {
                             Log.w(
-                                "[ContactsListViewModel] Found [",
-                                address.asString(),
-                                "], checking presence status"
+                                "[ContactsListViewModel] Presence disabled, starting new subscription ", address.asString()
                             )
-                            if (!friend.isSubscribesEnabled) {
-                                Log.w(
-                                    "[ContactsListViewModel] Presence disabled, starting new subscription ", address.asString()
-                                )
-                                friend.edit()
-                                friend.isSubscribesEnabled = true
-                                friend.incSubscribePolicy = SubscribePolicy.SPAccept
-                                friend.done()
-                                break
-                            } else Log.w("[ContactsListViewModel] Presence already enabled", address.asString())
-                        }
+                            friend.edit()
+                            friend.isSubscribesEnabled = true
+                            friend.incSubscribePolicy = SubscribePolicy.SPAccept
+                            friend.done()
+                            break
+                        } else Log.w("[ContactsListViewModel] Presence already enabled", address.asString())
                     }
                 }
             }
@@ -1145,28 +1140,26 @@ class CoreContext(
         Log.w("[ContactsFragment] DisableSubscriptions")
 
         // val core: Core = LinphoneApplication.coreContext.core
-        if (core != null) {
-            Log.w("[ContactsFragment] Checking friend list")
-            val friendLists = core.friendsLists
-            for (list in friendLists) {
-                val friends = list.friends
-                for (friend in friends) {
-                    for (address in friend.addresses) {
-                        if (address.isSip) {
-                            Log.w(
-                                "[ContactsFragment] Found [",
-                                address.asString(),
-                                "], disabling presence"
-                            )
-                            if (friend.isSubscribesEnabled) {
-                                friend.setSubscribesEnabled(false)
-                            }
-                            // friend.edit()
-                            // friend.isSubscribesEnabled = false
-                            // friend.incSubscribePolicy = SubscribePolicy.SPDeny
-                            // friend.done()
-                            break
+        Log.w("[ContactsFragment] Checking friend list")
+        val friendLists = core.friendsLists
+        for (list in friendLists) {
+            val friends = list.friends
+            for (friend in friends) {
+                for (address in friend.addresses) {
+                    if (address.isSip) {
+                        Log.w(
+                            "[ContactsFragment] Found [",
+                            address.asString(),
+                            "], disabling presence"
+                        )
+                        if (friend.isSubscribesEnabled) {
+                            friend.setSubscribesEnabled(false)
                         }
+                        // friend.edit()
+                        // friend.isSubscribesEnabled = false
+                        // friend.incSubscribePolicy = SubscribePolicy.SPDeny
+                        // friend.done()
+                        break
                     }
                 }
             }

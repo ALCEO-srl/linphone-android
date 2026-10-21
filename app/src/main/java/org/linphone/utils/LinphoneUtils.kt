@@ -194,7 +194,7 @@ class LinphoneUtils {
         }
 
         fun getRecordingDateFromFileName(name: String): Date {
-            return SimpleDateFormat(RECORDING_DATE_PATTERN, Locale.getDefault()).parse(name)
+            return SimpleDateFormat(RECORDING_DATE_PATTERN, Locale.getDefault()).parse(name) ?: Date()
         }
 
         @SuppressLint("MissingPermission")

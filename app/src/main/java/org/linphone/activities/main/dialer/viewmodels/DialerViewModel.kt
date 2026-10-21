@@ -62,7 +62,7 @@ class DialerViewModel : LogsUploadViewModel() {
 
     val onKeyClick: NumpadDigitListener = object : NumpadDigitListener {
         override fun handleClick(key: Char) {
-            val sb: StringBuilder = StringBuilder(enteredUri.value)
+            val sb: StringBuilder = StringBuilder(enteredUri.value.orEmpty())
             try {
                 sb.insert(enteredUriCursorPosition, key.toString())
             } catch (ioobe: IndexOutOfBoundsException) {

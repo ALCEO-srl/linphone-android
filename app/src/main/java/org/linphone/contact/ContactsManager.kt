@@ -392,9 +392,7 @@ fun Friend.getPerson(): Person {
         if (bm == null) {
             coreContext.contactsManager.contactAvatar
         } else IconCompat.createWithAdaptiveBitmap(bm)
-    if (icon != null) {
-        personBuilder.setIcon(icon)
-    }
+    personBuilder.setIcon(icon)
 
     personBuilder.setUri(nativeUri)
     personBuilder.setImportant(starred)

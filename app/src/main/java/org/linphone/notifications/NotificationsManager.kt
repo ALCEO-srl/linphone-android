@@ -558,7 +558,7 @@ class NotificationsManager(private val context: Context) {
                 } else {
                     coreContext.contactsManager.contactAvatar
                 }
-            if (userIcon != null) builder.setIcon(userIcon)
+            builder.setIcon(userIcon)
             builder.build()
         }
     }
