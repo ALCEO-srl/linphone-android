@@ -290,3 +290,18 @@ if (crashlyticsEnabled) {
     }
 }
 
+// dms: Play Console asks for the native debug symbols, but the libraries in the linphone-sdk AAR are stripped and AGP
+// can't extract them into the bundle: zip the unstripped ones from libs-debug, to upload by hand with the AAB
+def nativeDebugSymbolsDir = file(LinphoneSdkBuildDir + '/libs-debug/')
+tasks.register('zipNativeDebugSymbolsReleaseWithCrashlytics', Zip) {
+    from(nativeDebugSymbolsDir) {
+        include 'arm64-v8a/*.so'
+    }
+    destinationDirectory = layout.buildDirectory.dir('outputs/native-debug-symbols/releaseWithCrashlytics')
+    archiveFileName = 'native-debug-symbols.zip'
+    onlyIf { nativeDebugSymbolsDir.exists() }
+}
+afterEvaluate {
+    bundleReleaseWithCrashlytics.finalizedBy(zipNativeDebugSymbolsReleaseWithCrashlytics)
+}
+

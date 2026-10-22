@@ -180,6 +180,11 @@ readelf -lW build/libs/arm64-v8a/*.so | grep -E "^File|LOAD"
    serve la connessione. Senza, i crash arrivano illeggibili.
 4. L'AAB è in `app/build/outputs/bundle/releaseWithCrashlytics/` (o nella cartella scelta nella procedura).
    Caricarlo sul Play Console, prima in test interno.
+5. La build prepara anche `app/build/outputs/native-debug-symbols/releaseWithCrashlytics/native-debug-symbols.zip`,
+   con le librerie dell'SDK complete di simboli (da `linphone-sdk/build/libs-debug`). Il Play Console non li trova
+   nel bundle, perché le librerie dell'AAR sono già ripulite, e lo segnala con un avviso. Caricarlo in *Esplora app
+   bundle* → versione appena caricata → *Download* → *Simboli di debug nativi*. Servono a leggere i crash nativi in
+   Android vitals.
 
 ## 7. Cose da sapere
 
