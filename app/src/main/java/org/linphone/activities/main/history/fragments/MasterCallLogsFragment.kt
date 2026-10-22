@@ -154,6 +154,14 @@ class MasterCallLogsFragment : MasterFragment<HistoryMasterFragmentBinding, Call
 
         val layoutManager = LinearLayoutManager(requireContext())
         binding.callLogsList.layoutManager = layoutManager
+        // dms: the call report is read one page at a time, the previous page is asked near the end of the list
+        binding.callLogsList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (dy > 0 && layoutManager.findLastVisibleItemPosition() >= adapter.itemCount - 10) {
+                    listViewModel.loadOlderCallLogs()
+                }
+            }
+        })
 
         // Swipe action
       /*  //dms
@@ -294,6 +302,8 @@ class MasterCallLogsFragment : MasterFragment<HistoryMasterFragmentBinding, Call
 
     override fun onResume() {
         super.onResume()
+
+        listViewModel.refreshCallLogs()
 
         val tabsViewModel = requireActivity().run {
             ViewModelProvider(this)[TabsViewModel::class.java]

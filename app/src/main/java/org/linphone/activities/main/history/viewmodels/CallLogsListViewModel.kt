@@ -21,8 +21,7 @@ package org.linphone.activities.main.history.viewmodels
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.activities.main.history.data.GroupedCallLogData
@@ -44,6 +43,8 @@ class CallLogsListViewModel : ViewModel() {
         MutableLiveData<Event<Boolean>>()
     }
 
+    private var loadingOlderCallLogs = false
+
     private val listener: CoreListenerStub = object : CoreListenerStub() {
         override fun onCallLogUpdated(core: Core, log: CallLog) {
 
@@ -59,7 +60,8 @@ class CallLogsListViewModel : ViewModel() {
             message: String
         ) {
             if (state == RegistrationState.Ok || state == RegistrationState.Cleared) {
-                // The fetch is dispatched after the CoreContext listener, which tracks the registered account
+                // Dispatched after the CoreContext listener, which tracks the registered account: the server is only
+                // read again when the account changed, not at each registration refresh
                 updateCallLogs()
             }
         }
@@ -80,6 +82,11 @@ class CallLogsListViewModel : ViewModel() {
 
         coreContext.core.addListener(listener)
         coreContext.contactsManager.addListener(contactsUpdatedListener)
+
+        // dms: a call made from this phone is added to the cached call report, without reading the server
+        viewModelScope.launch {
+            coreContext.callReportChanged.collect { updateCallLogs() }
+        }
     }
 
     override fun onCleared() {
@@ -89,6 +96,22 @@ class CallLogsListViewModel : ViewModel() {
         coreContext.core.removeListener(listener)
 
         super.onCleared()
+    }
+
+    // dms: history shown again (opened or app back in foreground): the newest page is read again if old enough
+    fun refreshCallLogs() {
+        updateCallLogs(refreshIfOld = true)
+    }
+
+    // dms: end of the list reached, the previous page of the call report is read
+    fun loadOlderCallLogs() {
+        if (loadingOlderCallLogs || !coreContext.hasOlderCallLogs()) return
+
+        loadingOlderCallLogs = true
+        viewModelScope.launch {
+            if (coreContext.fetchOlderCallLogs()) updateCallLogs()
+            loadingOlderCallLogs = false
+        }
     }
 
     fun showAllCallLogs() {
@@ -169,23 +192,21 @@ class CallLogsListViewModel : ViewModel() {
         callLogs.value = computeCallLogs(emptyArray<CallLog>(), missed = false, conference = false)
     }
     // dms *********
-    private fun updateCallLogs() {
-        callLogs.value.orEmpty().forEach(GroupedCallLogData::destroy)
-        // dms Old code, we don't use anymore linphone core calllog
-        // callog val allCallLogs = coreContext.core.callLogs
-        //
-        CoroutineScope(Dispatchers.Main).launch {
+    // dms: the call logs come from the BCS call report cached by CoreContext, not from the linphone core; the filters
+    // only work on the cached entries
+    private fun updateCallLogs(refreshIfOld: Boolean = false) {
+        viewModelScope.launch {
             try {
-                val allCallLogs = coreContext.fetchCallLog()
+                val allCallLogs = coreContext.fetchCallLog(refreshIfOld)
 
                 Log.i("[Call Logs] ${allCallLogs.size} call logs found")
 
+                callLogs.value.orEmpty().forEach(GroupedCallLogData::destroy)
                 callLogs.value = when (filter.value) {
                     CallLogsFilter.MISSED -> computeCallLogs(allCallLogs, missed = true, conference = false)
                     CallLogsFilter.CONFERENCE -> computeCallLogs(allCallLogs, missed = false, conference = true)
                     else -> computeCallLogs(allCallLogs, missed = false, conference = false)
                 }
-                allCallLogs.forEach { callLog -> coreContext.core.removeCallLog(callLog) }
             } catch (e: Exception) {
                 android.util.Log.e("Error", "Failed to fetch calllog: ${e.message}")
             }

@@ -51,6 +51,9 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import kotlin.math.abs
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.linphone.BuildConfig
 import org.linphone.LinphoneApplication
 import org.linphone.LinphoneApplication.Companion.corePreferences
@@ -58,7 +61,7 @@ import org.linphone.R
 import org.linphone.bcsws.BcsWsHandler
 import org.linphone.bcsws.CallReportItem
 import org.linphone.bcsws.CallReportResponse
-import org.linphone.bcsws.DirectoryItem
+import org.linphone.bcsws.DirectoryResponse
 import org.linphone.bcsws.RemoteParty
 import org.linphone.compatibility.Compatibility
 import org.linphone.compatibility.PhoneStateInterface
@@ -92,7 +95,16 @@ class CoreContext(
 
     var bcsWsHandler: BcsWsHandler? = null
 
-    private var bcsDirectoryItems: List<DirectoryItem>? = null
+    // dms: BCS call report, read one page at a time and cached newest first (see fetchCallLog)
+    private class CallReportEntry(val id: String, val callLog: CallLog)
+    private val callReportMutex = Mutex()
+    private val callReportEntries = arrayListOf<CallReportEntry>()
+    private var callReportAccount: String? = null // account of the cached entries, null when not loaded
+    private var callReportOldestOffset = 0 // server offset of the oldest cached entry
+    private var callReportLoadTime = 0L
+
+    // dms: a call made from this phone was added to the cached call report
+    val callReportChanged = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     private val collator: Collator = Collator.getInstance()
 
@@ -161,7 +173,6 @@ class CoreContext(
 
                 if (lastAccountIdRegistered?.length == 0 || lastAccountIdRegistered != account.params.identityAddress?.asStringUriOnly()) {
                     lastAccountIdRegistered = account.params.identityAddress?.asStringUriOnly()
-                    bcsDirectoryItems = null // dms: directory of the new account
                     val username = account.params.identityAddress?.username ?: "nouser"
                     val domain = account.params.identityAddress?.domain ?: "nodomain"
                     val authInfo = account.findAuthInfo()
@@ -180,7 +191,6 @@ class CoreContext(
                 if (lastAccountIdRegistered?.length != 0) {
                     Log.i("[Context] Account Removing buddies")
                     lastAccountIdRegistered = ""
-                    bcsDirectoryItems = null // dms: directory no longer available with the account disabled
                     disableSubscriptions()
                     contactsManager.clearFriends()
                 }
@@ -1166,72 +1176,33 @@ class CoreContext(
         }
     }
 
-    public suspend fun fetchDirectory(query: String): List<DirectoryItem> {
+    // dms: one page of the BCS directory; the server searches the filter in every field of the entries
+    public suspend fun fetchDirectoryPage(filter: String, offset: Int, limit: Int): DirectoryResponse? {
         // dms: the web service still has the credentials, the directory is only shown while the account is registered
-        if (lastAccountIdRegistered.isNullOrEmpty()) return emptyList()
+        if (lastAccountIdRegistered.isNullOrEmpty()) return DirectoryResponse(0, emptyList())
 
-        if (bcsDirectoryItems == null) {
-            try {
-                var directoryResponse = bcsWsHandler?.fetchDirectory("")
-                bcsDirectoryItems = directoryResponse?.Items
-            } catch (e: HttpException) {
-                // Gestione degli errori HTTP
-                val code = e.code() // Codice di stato HTTP
-                val errorMessage = e.message() // Messaggio di errore HTTP
-                Log.e("HTTP Error: $code - $errorMessage")
-                bcsDirectoryItems = null
-            } catch (e: IOException) {
-                // Gestione degli errori di rete o I/O
-                Log.e("IO Error: ${e.message}")
-                bcsDirectoryItems = null
-            } catch (e: Exception) {
-                // Gestione di altri tipi di eccezioni non previsti
-                Log.e("Error: ${e.message}")
-                bcsDirectoryItems = null
-            }
+        return try {
+            bcsWsHandler?.fetchDirectory(filter, limit, offset)
+        } catch (e: HttpException) {
+            Log.e("[Directory] HTTP Error: ${e.code()} - ${e.message()}")
+            null
+        } catch (e: IOException) {
+            Log.e("[Directory] IO Error: ${e.message}")
+            null
+        } catch (e: Exception) {
+            Log.e("[Directory] Error: ${e.message}")
+            null
         }
-        if (bcsDirectoryItems == null) {
-            bcsDirectoryItems = emptyList()
-        }
-
-        val result = bcsDirectoryItems!!.filter { item ->
-            item.Id.contains(query, ignoreCase = true) ||
-                item.Uri.contains(query, ignoreCase = true) ||
-                item.Name.contains(query, ignoreCase = true) ||
-                item.Surname.contains(query, ignoreCase = true) ||
-                item.DisplayName.contains(query, ignoreCase = true) ||
-                item.Profession.contains(query, ignoreCase = true) ||
-                item.Company.contains(query, ignoreCase = true) ||
-                item.EmailAddress.contains(query, ignoreCase = true) ||
-                item.MobilePhone.contains(query, ignoreCase = true) ||
-                item.LandlinePhone.contains(query, ignoreCase = true) ||
-                item.FaxPhone.contains(query, ignoreCase = true) ||
-                item.Title.contains(query, ignoreCase = true) ||
-                item.Address.contains(query, ignoreCase = true) ||
-                item.Branch.contains(query, ignoreCase = true) ||
-                item.Office.contains(query, ignoreCase = true) ||
-                item.Manager.contains(query, ignoreCase = true) ||
-                item.Assistant.contains(query, ignoreCase = true) ||
-                item.Attr1.contains(query, ignoreCase = true) ||
-                item.Attr2.contains(query, ignoreCase = true) ||
-                item.Attr3.contains(query, ignoreCase = true) ||
-                item.Attr4.contains(query, ignoreCase = true) ||
-                item.Attr5.contains(query, ignoreCase = true) ||
-                item.Attr6.contains(query, ignoreCase = true) ||
-                item.Attr7.contains(query, ignoreCase = true) ||
-                item.Attr8.contains(query, ignoreCase = true) ||
-                item.Attr9.contains(query, ignoreCase = true) ||
-                item.Attr10.contains(query, ignoreCase = true) ||
-                item.AvatarImageUrl.contains(query, ignoreCase = true)
-        }
-
-        return result
     }
 
     // dms
     public fun clearCallLog() {
         core.clearCallLogs()
         CoroutineScope(Dispatchers.Main).launch {
+            callReportMutex.withLock {
+                callReportEntries.clear()
+                callReportOldestOffset = 0
+            }
             try {
                 bcsWsHandler?.clearAllCallReportItems()
                 Log.i("CallReport", "All call report items cleared.")
@@ -1342,6 +1313,7 @@ class CoreContext(
 
                     val addedItem = bcsWsHandler?.addCallReportEntry(newCall)
                     Log.i("CallReport", "Added new call with ID: ${addedItem?.Id}")
+                    if (addedItem != null) addToCallReportCache(newCall.copy(Id = addedItem.Id))
                 } catch (e: Exception) {
                     android.util.Log.e("Error", "Error adding call report item: ${e.message}")
                 }
@@ -1350,89 +1322,161 @@ class CoreContext(
             Log.e("CallReport", "Error adding call report item: ${e.message}")
         }
     }
-    public suspend fun fetchCallLog(): Array<CallLog> {
-        var CallLogs = emptyArray<CallLog>()
-        // dms: the web service still has the credentials, the call log is only shown while the account is registered
-        if (lastAccountIdRegistered.isNullOrEmpty()) return CallLogs
-        try {
-            val CallReportResponse = bcsWsHandler?.fetchCallReport(500, 0)
-
-            if (CallReportResponse != null) {
-                for (idx in CallReportResponse.Items.size - 1 downTo 0) {
-                    val item = CallReportResponse.Items[idx]
-                    // CallReportResponse.Items.reversed().forEach { item ->
-                    Log.i("CallReport", "Call: ${item.Direction} - ${item.RemoteParty.DisplayName} at ${item.Timestamp}")
-
-                    val Direction: Call.Dir
-                    val from: Address?
-                    val to: Address?
-                    var CallStatus: Call.Status = Call.Status.Success
-                    if (item.Direction == "incoming") {
-                        Direction = Call.Dir.Incoming
-                        from = LinphoneApplication.coreContext.core.createAddress(item.RemoteParty.Uri)
-                        to = core.defaultAccount!!.params.identityAddress
-                        if (!item.IsConnected) CallStatus = Call.Status.Missed
-                    } else {
-                        Direction = Call.Dir.Outgoing
-                        from = core.defaultAccount!!.params.identityAddress
-                        to = LinphoneApplication.coreContext.core.createAddress(item.RemoteParty.Uri)
-                    }
-                    val instant = Instant.parse(item.Timestamp)
-                    val timestampSeconds = instant.epochSecond
-                    if (CallStatus == Call.Status.Success)
-                        when (item.TermReason) {
-                            "normal" -> CallStatus = Call.Status.Success
-                            "sip-reason", "local-reject", "remote-reject" ->
-                                when (item.TermSipReason) {
-                                    302 -> CallStatus = Call.Status.EarlyAborted
-                                    404 -> CallStatus = Call.Status.Aborted
-                                    401, 403, 407 -> CallStatus = Call.Status.EarlyAborted // forbidden
-                                    408, 480, 4887 -> Call.Status.Aborted // no answer
-                                    484 -> CallStatus = Call.Status.EarlyAborted // address incomplete
-                                    486, 600 -> CallStatus = Call.Status.EarlyAborted // busy
-                                    488 -> CallStatus = Call.Status.EarlyAborted // not accetable
-                                    503 -> CallStatus = Call.Status.EarlyAborted // server unavailable
-                                    603 -> CallStatus = Call.Status.Declined // call rejected
-                                    else -> CallStatus = Call.Status.EarlyAborted // other
-                                }
-                            "sip-remote-cancelled", "sip-proxy-cancelled" -> Call.Status.Aborted // no answer
-                            "sip-local-cancelled" -> Call.Status.Aborted // cancelled
-                            "remote-bye-without-ack" ->
-                                when (item.TermSipReason) {
-                                    0 -> CallStatus = Call.Status.Success
-                                    else -> CallStatus = Call.Status.EarlyAborted // other
-                                }
-                            "remote-disconnected" -> CallStatus = Call.Status.Success
-                            "cancelled-by-forking" -> CallStatus = Call.Status.AcceptedElsewhere
-                            // internal-error, network-error, bad-address
-                            // generic-fail,audio-ice-create-failed, audio-ice-checks-failed,
-                            // dialog-interrupted,local-bye-without-ack,local-timeout,
-                            else -> CallStatus = Call.Status.EarlyAborted
-                        }
-
-                    val newLog = LinphoneApplication.coreContext.core.createCallLog(from!!, to!!, Direction, item.Duration, timestampSeconds, 0, CallStatus, false, 1.0F)
-
-                    CallLogs = CallLogs.plus(newLog)
-                }
+    // dms: the server keeps the last 500 calls of the user and returns them in ascending order, so the newest page is at
+    // the end. The history shows the cached entries; the newest page is read again when the history is opened, at most
+    // every CALL_REPORT_REFRESH_MS (refreshIfOld), so calls made or deleted from other devices of the user show up
+    public suspend fun fetchCallLog(refreshIfOld: Boolean): Array<CallLog> {
+        return callReportMutex.withLock {
+            val account = lastAccountIdRegistered
+            // dms: the web service still has the credentials, the call log is only shown while the account is registered
+            if (account.isNullOrEmpty()) {
+                callReportEntries.clear()
+                callReportAccount = null
+                return@withLock emptyArray()
             }
-        } catch (e: HttpException) {
-            // Gestione degli errori HTTP
-            val code = e.code() // Codice di stato HTTP
-            val errorMessage = e.message() // Messaggio di errore HTTP
-            Log.e("HTTP Error: $code - $errorMessage")
-        } catch (e: IOException) {
-            // Gestione degli errori di rete o I/O
-            Log.e("IO Error: ${e.message}")
-        } catch (e: Exception) {
-            // Gestione di altri tipi di eccezioni non previsti
-            Log.e("Error: ${e.message}")
+
+            val old = System.currentTimeMillis() - callReportLoadTime >= CALL_REPORT_REFRESH_MS
+            if (callReportAccount != account || (refreshIfOld && old)) {
+                loadNewestCallReportPage(account)
+            }
+            callReportEntries.map { it.callLog }.toTypedArray()
         }
-        return CallLogs
+    }
+
+    public fun hasOlderCallLogs(): Boolean = callReportAccount != null && callReportOldestOffset > 0
+
+    // Returns true when older entries were added to the cache
+    public suspend fun fetchOlderCallLogs(): Boolean {
+        return callReportMutex.withLock {
+            if (callReportAccount == null || callReportAccount != lastAccountIdRegistered || callReportOldestOffset == 0) {
+                return@withLock false
+            }
+
+            val offset = maxOf(0, callReportOldestOffset - CALL_REPORT_PAGE_SIZE)
+            try {
+                val page = bcsWsHandler?.fetchCallReport(callReportOldestOffset - offset, offset) ?: return@withLock false
+                val count = callReportEntries.size
+                appendToCallReportCache(page.Items)
+                callReportOldestOffset = offset
+                callReportEntries.size > count
+            } catch (e: Exception) {
+                Log.e("[Call Report] Failed to fetch older calls: ${e.message}")
+                false
+            }
+        }
+    }
+
+    // Two small requests: the total, then the newest page. The cache is replaced, older pages are read again on scroll
+    private suspend fun loadNewestCallReportPage(account: String) {
+        try {
+            val handler = bcsWsHandler ?: return
+            val count = handler.fetchCallReport(1, 0).Count
+            val offset = maxOf(0, count - CALL_REPORT_PAGE_SIZE)
+            val items = if (count > 0) handler.fetchCallReport(CALL_REPORT_PAGE_SIZE, offset).Items else emptyList()
+
+            callReportEntries.clear()
+            appendToCallReportCache(items)
+            callReportAccount = account
+            callReportOldestOffset = offset
+            callReportLoadTime = System.currentTimeMillis()
+            Log.i("[Call Report] ${callReportEntries.size} of $count calls loaded")
+        } catch (e: HttpException) {
+            Log.e("[Call Report] HTTP Error: ${e.code()} - ${e.message()}")
+        } catch (e: IOException) {
+            Log.e("[Call Report] IO Error: ${e.message}")
+        } catch (e: Exception) {
+            Log.e("[Call Report] Error: ${e.message}")
+        }
+    }
+
+    // Items in the server order (oldest first) are older than the cached ones: added at the end, newest first
+    private fun appendToCallReportCache(items: List<CallReportItem>) {
+        val ids = callReportEntries.mapTo(HashSet()) { it.id }
+        for (item in items.asReversed()) {
+            if (item.Id in ids) continue
+            val callLog = createCallLogFromReport(item) ?: continue
+            callReportEntries.add(CallReportEntry(item.Id, callLog))
+        }
+    }
+
+    private suspend fun addToCallReportCache(item: CallReportItem) {
+        callReportMutex.withLock {
+            // Not loaded yet: the call will be read with the newest page
+            if (callReportAccount == null || callReportAccount != lastAccountIdRegistered) return
+            if (callReportEntries.any { it.id == item.Id }) return
+            val callLog = createCallLogFromReport(item) ?: return
+            callReportEntries.add(0, CallReportEntry(item.Id, callLog))
+        }
+        callReportChanged.tryEmit(Unit)
+    }
+
+    private fun createCallLogFromReport(item: CallReportItem): CallLog? {
+        val identity = core.defaultAccount?.params?.identityAddress ?: return null
+        try {
+            val Direction: Call.Dir
+            val from: Address?
+            val to: Address?
+            var CallStatus: Call.Status = Call.Status.Success
+            if (item.Direction == "incoming") {
+                Direction = Call.Dir.Incoming
+                from = LinphoneApplication.coreContext.core.createAddress(item.RemoteParty.Uri)
+                to = identity
+                if (!item.IsConnected) CallStatus = Call.Status.Missed
+            } else {
+                Direction = Call.Dir.Outgoing
+                from = identity
+                to = LinphoneApplication.coreContext.core.createAddress(item.RemoteParty.Uri)
+            }
+            val instant = Instant.parse(item.Timestamp)
+            val timestampSeconds = instant.epochSecond
+            if (CallStatus == Call.Status.Success)
+                when (item.TermReason) {
+                    "normal" -> CallStatus = Call.Status.Success
+                    "sip-reason", "local-reject", "remote-reject" ->
+                        when (item.TermSipReason) {
+                            302 -> CallStatus = Call.Status.EarlyAborted
+                            404 -> CallStatus = Call.Status.Aborted
+                            401, 403, 407 -> CallStatus = Call.Status.EarlyAborted // forbidden
+                            408, 480, 4887 -> Call.Status.Aborted // no answer
+                            484 -> CallStatus = Call.Status.EarlyAborted // address incomplete
+                            486, 600 -> CallStatus = Call.Status.EarlyAborted // busy
+                            488 -> CallStatus = Call.Status.EarlyAborted // not accetable
+                            503 -> CallStatus = Call.Status.EarlyAborted // server unavailable
+                            603 -> CallStatus = Call.Status.Declined // call rejected
+                            else -> CallStatus = Call.Status.EarlyAborted // other
+                        }
+                    "sip-remote-cancelled", "sip-proxy-cancelled" -> Call.Status.Aborted // no answer
+                    "sip-local-cancelled" -> Call.Status.Aborted // cancelled
+                    "remote-bye-without-ack" ->
+                        when (item.TermSipReason) {
+                            0 -> CallStatus = Call.Status.Success
+                            else -> CallStatus = Call.Status.EarlyAborted // other
+                        }
+                    "remote-disconnected" -> CallStatus = Call.Status.Success
+                    "cancelled-by-forking" -> CallStatus = Call.Status.AcceptedElsewhere
+                    // internal-error, network-error, bad-address
+                    // generic-fail,audio-ice-create-failed, audio-ice-checks-failed,
+                    // dialog-interrupted,local-bye-without-ack,local-timeout,
+                    else -> CallStatus = Call.Status.EarlyAborted
+                }
+
+            val newLog = LinphoneApplication.coreContext.core.createCallLog(from!!, to!!, Direction, item.Duration, timestampSeconds, 0, CallStatus, false, 1.0F)
+
+            // dms: the call log is created by the core only to be shown, it must not stay in the core history
+            core.removeCallLog(newLog)
+            return newLog
+        } catch (e: Exception) {
+            Log.e("[Call Report] Invalid entry ${item.Id}: ${e.message}")
+            return null
+        }
     }
 
 // dms end ************
 
     companion object {
+        private const val CALL_REPORT_PAGE_SIZE = 50
+        private const val CALL_REPORT_REFRESH_MS = 5 * 60 * 1000L
+
         private const val TRANSFORMATION = "AES/GCM/NoPadding"
         private const val ANDROID_KEY_STORE = "AndroidKeyStore"
         private const val ALIAS = "vfs"

@@ -68,7 +68,13 @@ class DirectoryAdapter(
 
     // Metodo per aggiornare la lista degli elementi e notificare l'adapter del cambiamento
     fun setItems(newItems: List<DirectoryItem>) {
+        val oldItems = items
         items = newItems
-        notifyDataSetChanged()
+        // dms: a new page only adds rows at the end, the rows already shown stay as they are
+        if (oldItems.isNotEmpty() && newItems.size > oldItems.size && newItems[oldItems.size - 1] === oldItems.last()) {
+            notifyItemRangeInserted(oldItems.size, newItems.size - oldItems.size)
+        } else {
+            notifyDataSetChanged()
+        }
     }
 }

@@ -148,13 +148,15 @@ private class CallLogDiffCallback : DiffUtil.ItemCallback<GroupedCallLogData>() 
         oldItem: GroupedCallLogData,
         newItem: GroupedCallLogData
     ): Boolean {
-        return oldItem.lastCallLog.callId == newItem.lastCallLog.callId
+        // dms: the call logs made from the BCS call report have no call id, but CoreContext caches them: a group is
+        // the same as long as it starts with the same call
+        return oldItem.callLogs.first() === newItem.callLogs.first()
     }
 
     override fun areContentsTheSame(
         oldItem: GroupedCallLogData,
         newItem: GroupedCallLogData
     ): Boolean {
-        return oldItem.callLogs.size == newItem.callLogs.size
+        return oldItem.callLogs.size == newItem.callLogs.size && oldItem.lastCallLog === newItem.lastCallLog
     }
 }

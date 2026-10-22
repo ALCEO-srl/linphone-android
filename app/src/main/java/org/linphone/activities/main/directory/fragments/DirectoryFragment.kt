@@ -3,17 +3,12 @@ package org.linphone.activities.main.directory.fragments
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ProgressBar
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import org.linphone.LinphoneApplication.Companion.coreContext
 import org.linphone.R
 import org.linphone.activities.GenericFragment
@@ -26,6 +21,11 @@ import org.linphone.core.RegistrationState
 import org.linphone.databinding.DirectoryFragmentBinding
 
 class DirectoryFragment : GenericFragment<DirectoryFragmentBinding>() {
+    companion object {
+        // dms: the next page is asked when this many entries are left to show
+        private const val NEXT_PAGE_THRESHOLD = 10
+    }
+
     private val viewModel: DirectoryViewModel by navGraphViewModels(R.id.directoryFragment)
     private lateinit var adapter: DirectoryAdapter
     private lateinit var searchField: EditText
@@ -39,10 +39,8 @@ class DirectoryFragment : GenericFragment<DirectoryFragmentBinding>() {
             message: String
         ) {
             if (state == RegistrationState.Ok || state == RegistrationState.Cleared) {
-                // Dispatched after the CoreContext listener, which updates the directory cache
-                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                    viewModel.updateDirectory(coreContext.fetchDirectory(searchField.text.toString().trim()))
-                }
+                // Dispatched after the CoreContext listener, which tracks the registered account
+                viewModel.reload()
             }
         }
     }
@@ -57,15 +55,8 @@ class DirectoryFragment : GenericFragment<DirectoryFragmentBinding>() {
         binding.viewModel = viewModel
 
         searchField = view.findViewById(R.id.searchField)
-        searchField.setText("")
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                viewModel.updateDirectory(coreContext.fetchDirectory(""))
-                // Usa il risultato come necessario
-            } catch (e: Exception) {
-                Log.e("Error", "Failed to fetch directory: ${e.message}")
-            }
-        }
+        // dms: the view model survives the detail screen, its search is kept
+        searchField.setText(viewModel.searchText)
 
         searchField.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
@@ -73,18 +64,8 @@ class DirectoryFragment : GenericFragment<DirectoryFragmentBinding>() {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // Qui puoi chiamare la tua funzione di ricerca ogni volta che il testo cambia
-                // Assicurati di gestire il caso in cui il testo è vuoto per ripristinare lo stato precedente
-                val query = s.toString().trim()
-
-                CoroutineScope(Dispatchers.Main).launch {
-                    try {
-                        viewModel.updateDirectory(coreContext.fetchDirectory(query))
-                        // Usa il risultato come necessario
-                    } catch (e: Exception) {
-                        Log.e("Error", "Failed to fetch directory: ${e.message}")
-                    }
-                }
+                // dms: the view model decides when to ask the server
+                viewModel.search(s.toString())
             }
 
             override fun afterTextChanged(s: Editable?) {
@@ -96,8 +77,16 @@ class DirectoryFragment : GenericFragment<DirectoryFragmentBinding>() {
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
 
         adapter = DirectoryAdapter(sharedViewModel, requireContext())
-        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        val layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (dy > 0 && layoutManager.findLastVisibleItemPosition() >= adapter.itemCount - NEXT_PAGE_THRESHOLD) {
+                    viewModel.loadNextPage()
+                }
+            }
+        })
 
         viewModel.directory.observe(
             viewLifecycleOwner,

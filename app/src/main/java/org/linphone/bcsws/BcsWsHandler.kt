@@ -52,8 +52,9 @@ interface BcsWsService {
         @Header("Authorization") bearerToken: String,
         @Path("clientid") cliendid: String,
         @Path("domain") domain: String,
-        @Query("limit") limit: String,
-        @Query("filter") filter: String
+        @Query("limit") limit: Int,
+        @Query("offset") offset: Int,
+        @Query("filter") filter: String?
     ): DirectoryResponse
 
     @GET("{clientid}/bcsws/v1/domains/{domain}/users/{user}/callreport")
@@ -211,13 +212,16 @@ class BcsWsHandler(server: String, port: String) {
         }
     }
 
-    suspend fun fetchDirectory(filter: String = ""): DirectoryResponse {
+    // Una pagina della rubrica; il filtro (vuoto = nessun filtro) è applicato dal server su tutti i campi
+    suspend fun fetchDirectory(filter: String, limit: Int, offset: Int): DirectoryResponse {
+        Log.i("[BcsWsHandler] directory filter=[$filter] limit=$limit offset=$offset")
         return withContext(Dispatchers.IO) {
-            withAuth { token -> bcsWsService.getDirectory(token, domain, domain, "10000", filter) }
+            withAuth { token -> bcsWsService.getDirectory(token, domain, domain, limit, offset, filter.ifEmpty { null }) }
         }
     }
 
     suspend fun fetchCallReport(limit: Int? = null, offset: Int? = null): CallReportResponse {
+        Log.i("[BcsWsHandler] callreport limit=$limit offset=$offset")
         return withContext(Dispatchers.IO) {
             withAuth { token -> bcsWsService.getCallReport(token, domain, domain, user, limit, offset) }
         }
