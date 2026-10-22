@@ -4,8 +4,8 @@ plugins {
     id 'com.android.legacy-kapt'
 }
 
-def appVersionName = "5.2.8"
-def appVersionCode = 50017
+def appVersionName = "5.2.9"
+def appVersionCode = 50018
 
 static def getPackageName() {
     return "com.alceo.bcsphone"
